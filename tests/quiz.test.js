@@ -9,6 +9,8 @@ import {
   advanceQuestion,
   normalize,
   useHint,
+  selectAnswer,
+  confirmAnswer,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -157,4 +159,42 @@ test("single-direction sessions retain the selected language", () => {
       session.questions.every((question) => question.direction === direction),
     );
   }
+});
+
+test("selection is changeable and only confirmation counts an answer once", () => {
+  const session = createSession(cards, cards, { count: 2 });
+  const question = session.questions[0];
+  assert.equal(confirmAnswer(session), false);
+  const wrong = question.options.find((option) => option !== question.answer);
+  assert.equal(selectAnswer(session, wrong), true);
+  assert.equal(session.answered, 0);
+  assert.equal(session.correct, 0);
+  assert.equal(selectAnswer(session, question.answer), true);
+  assert.equal(question.selected, question.answer);
+  assert.equal(confirmAnswer(session), true);
+  assert.equal(session.correct, 1);
+  assert.equal(session.answered, 1);
+  assert.equal(confirmAnswer(session), false);
+  assert.equal(selectAnswer(session, wrong), false);
+  advanceQuestion(session);
+  assert.equal(session.questions[1].selected, null);
+  assert.equal(confirmAnswer(session), false);
+});
+
+test("hints clear an eliminated selection and skip does not confirm the selected answer", () => {
+  const session = createSession(cards, cards, { count: 2 });
+  const question = session.questions[0];
+  const wrongChoices = question.options.filter(
+    (option) => option !== question.answer,
+  );
+  selectAnswer(session, wrongChoices[1]);
+  useHint(session, () => 0);
+  assert.equal(question.selected, null);
+  assert.equal(confirmAnswer(session), false);
+  assert.equal(selectAnswer(session, question.eliminated[0]), false);
+  selectAnswer(session, question.answer);
+  answerQuestion(session, null);
+  assert.equal(session.correct, 0);
+  assert.equal(session.answered, 1);
+  assert.equal(session.responses[0].choice, null);
 });

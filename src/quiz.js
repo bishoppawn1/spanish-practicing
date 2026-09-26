@@ -40,6 +40,7 @@ export function makeQuestion(
     answer: card[answerKey],
     options: shuffle([card[answerKey], ...distractors], random),
     eliminated: [],
+    selected: null,
   };
 }
 export function createSession(
@@ -89,6 +90,23 @@ export function answerQuestion(session, choice) {
   if (correct) session.correct++;
   return true;
 }
+export function selectAnswer(session, choice) {
+  const question = session.questions[session.index];
+  if (
+    !question ||
+    session.responses[session.index] ||
+    !question.options.includes(choice) ||
+    question.eliminated.includes(choice)
+  )
+    return false;
+  question.selected = choice;
+  return true;
+}
+export function confirmAnswer(session) {
+  const question = session.questions[session.index];
+  if (!question || question.selected === null) return false;
+  return answerQuestion(session, question.selected);
+}
 export function useHint(session, random = Math.random) {
   const question = session.questions[session.index];
   if (
@@ -101,6 +119,7 @@ export function useHint(session, random = Math.random) {
     question.options.filter((option) => option !== question.answer),
     random,
   ).slice(0, 2);
+  if (question.eliminated.includes(question.selected)) question.selected = null;
   return true;
 }
 export function advanceQuestion(session) {
