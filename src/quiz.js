@@ -9,6 +9,20 @@ export function shuffle(items, random = Math.random) {
 export const normalize = (text) =>
   text.toLocaleLowerCase().replace(/[\p{P}\s]/gu, "");
 
+function answerKind(card, key) {
+  const text = card[key];
+  if (/[¿?]/.test(text) || /^(who|what|when|where|how)\b/i.test(text))
+    return "question";
+  if (["months", "days", "seasons"].includes(card.family)) return card.family;
+  if (/^the (months|days|seasons)\b/i.test(text))
+    return `collection-${card.category}`;
+  if (
+    /^(el |la |los |las |un |una |mi |señor\b|señora\b|señorita\b)/i.test(text)
+  )
+    return "person-or-noun";
+  return `${card.category}-phrase`;
+}
+
 export function makeQuestion(
   card,
   pool,
@@ -21,24 +35,50 @@ export function makeQuestion(
   const eligible = shuffle(pool, random).filter(
     (other) => other.id !== card.id && other.equivalent !== card.equivalent,
   );
-  eligible.sort(
+  const kind = answerKind(card, answerKey);
+  const compatible = eligible.filter(
+    (other) => answerKind(other, answerKey) === kind,
+  );
+  const candidates = compatible.length >= 3 ? compatible : eligible;
+  candidates.sort(
     (a, b) =>
+      Number(b.contrast === card.contrast && Boolean(card.contrast)) -
+        Number(a.contrast === card.contrast && Boolean(card.contrast)) ||
+      Number(/\s\/\s/.test(a[answerKey])) -
+        Number(/\s\/\s/.test(b[answerKey])) ||
       Number(b.family === card.family) - Number(a.family === card.family),
   );
   const distractors = [];
-  for (const other of eligible) {
+  for (const other of candidates) {
     const key = normalize(other[answerKey]);
     if (seen.has(key)) continue;
     seen.add(key);
     distractors.push(other[answerKey]);
     if (distractors.length === 3) break;
   }
+  const options = shuffle([card[answerKey], ...distractors], random);
+  const optionCards = Object.fromEntries(
+    options.map((option) => [
+      option,
+      normalize(option) === normalize(card[answerKey])
+        ? card
+        : (candidates.find(
+            (candidate) =>
+              normalize(candidate[answerKey]) === normalize(option),
+          ) ??
+          eligible.find(
+            (candidate) =>
+              normalize(candidate[answerKey]) === normalize(option),
+          )),
+    ]),
+  );
   return {
     card,
     direction,
     prompt: card[promptKey],
     answer: card[answerKey],
-    options: shuffle([card[answerKey], ...distractors], random),
+    options,
+    optionCards,
     eliminated: [],
     selected: null,
   };
@@ -119,10 +159,27 @@ export function useHint(session, random = Math.random) {
     question.eliminated.length
   )
     return false;
-  question.eliminated = shuffle(
-    question.options.filter((option) => option !== question.answer),
-    random,
-  ).slice(0, 2);
+  const answerKey = question.direction === "es-en" ? "en" : "es";
+  const wrong = question.options.filter((option) => option !== question.answer);
+  question.eliminated = shuffle(wrong, random)
+    .sort((a, b) => {
+      const relevance = (option) => {
+        const card = question.optionCards[option];
+        return (
+          (card?.contrast === question.card.contrast && question.card.contrast
+            ? 100
+            : 0) +
+          (card?.category === question.card.category ? 10 : 0) +
+          (card &&
+          answerKind(card, answerKey) === answerKind(question.card, answerKey)
+            ? 5
+            : 0) +
+          (card?.family === question.card.family ? 1 : 0)
+        );
+      };
+      return relevance(a) - relevance(b);
+    })
+    .slice(0, 2);
   if (question.eliminated.includes(question.selected)) question.selected = null;
   return true;
 }

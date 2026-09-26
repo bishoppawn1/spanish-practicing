@@ -11,7 +11,8 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 - Select an answer, then press **Confirm answer**. You can change your selection before confirming. Correct answers display a large green **Correct!** banner.
 - Track **correct out of answered**. Each question counts only once.
 - The **Skipped** counter records each skip during the session, including skipping the same question again. It stays separate from the score and resets with a new session.
-- **Hint** removes two wrong choices, without counting an answer.
+- **Hint** removes two wrong choices, without counting an answer. Distractors match the kind of answer requested where the set has enough choices.
+- Related distractors prioritize the formal/familiar versions of the same name, age, and origin questions when available. Source slash-separated answers stay intact.
 - **Skip** leaves the score and answered count unchanged. After you continue, the question returns at a random position among the remaining questions. It will not repeat immediately unless it is the only unanswered question left. A session finishes only after every question has a confirmed answer. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
 - Review your results and practice only missed terms in a fresh session.
 - Browse or search all 98 terms in Vocabulary. Switching tabs preserves the session; returning to setup or reloading starts fresh.
