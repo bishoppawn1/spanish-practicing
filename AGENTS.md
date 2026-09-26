@@ -15,7 +15,7 @@ A text-only Spanish vocabulary app using all 98 cards in the README's Quizlet se
 - Maintain accessible keyboard controls, clear text feedback, and responsive layouts.
 - Keep runtime code dependency-free, with no backend, API keys, or login. Use relative paths compatible with `/spanish-practicing/` on GitHub Pages.
 - Run `npm test` and `npm run build` for application changes. Verify relevant UI flows in a browser.
-- Keep the README's GitHub Pages link current.
+- Keep the README's GitHub Pages link current. The production build versions asset URLs automatically. Until Pages uses only GitHub Actions, also bump the version query in `index.html` and local imports in `src/app.js` when changing those assets, so branch publishing cannot serve cached code.
 - After completing and verifying a change, commit and push to GitHub. Push each completed task, not each individual file edit. Never push credentials, force-push, or overwrite someone else's changes. Report any push blocker.
 
 ## Files

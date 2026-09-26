@@ -27,7 +27,7 @@ for (const name of modules) {
   await writeFile(
     file,
     content.replace(
-      /(from\s+["'])(\.\/[^"']+\.js)(["'])/g,
+      /(from\s+["'])(\.\/[^"'?]+\.js)(?:\?v=[^"']+)?(["'])/g,
       `$1$2?v=${version}$3`,
     ),
   );
@@ -36,7 +36,7 @@ const index = new URL("index.html", dist);
 await writeFile(
   index,
   (await readFile(index, "utf8")).replace(
-    /((?:src|href)="\.\/[^"?]+\.(?:js|css|svg))"/g,
+    /((?:src|href)="\.\/[^"?]+\.(?:js|css|svg))(?:\?v=[^"]+)?"/g,
     `$1?v=${version}"`,
   ),
 );
