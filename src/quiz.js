@@ -73,10 +73,11 @@ export function createSession(
 }
 export function answerQuestion(session, choice) {
   const question = session.questions[session.index];
-  if (!question || session.responses[session.index]) return false;
+  if (!question || question.skipped || session.responses[session.index])
+    return false;
   if (
-    choice !== null &&
-    (!question.options.includes(choice) || question.eliminated.includes(choice))
+    !question.options.includes(choice) ||
+    question.eliminated.includes(choice)
   )
     return false;
   const correct = choice === question.answer;
@@ -94,6 +95,7 @@ export function selectAnswer(session, choice) {
   const question = session.questions[session.index];
   if (
     !question ||
+    question.skipped ||
     session.responses[session.index] ||
     !question.options.includes(choice) ||
     question.eliminated.includes(choice)
@@ -111,6 +113,7 @@ export function useHint(session, random = Math.random) {
   const question = session.questions[session.index];
   if (
     !question ||
+    question.skipped ||
     session.responses[session.index] ||
     question.eliminated.length
   )
@@ -122,7 +125,29 @@ export function useHint(session, random = Math.random) {
   if (question.eliminated.includes(question.selected)) question.selected = null;
   return true;
 }
-export function advanceQuestion(session) {
+export function skipQuestion(session) {
+  const question = session.questions[session.index];
+  if (!question || question.skipped || session.responses[session.index])
+    return false;
+  question.skipped = true;
+  return true;
+}
+export function advanceQuestion(session, random = Math.random) {
+  const question = session.questions[session.index];
+  if (question?.skipped) {
+    session.questions.splice(session.index, 1);
+    const remaining = session.questions.length - session.index;
+    // Let another pending question appear first, unless this is the last one.
+    const position =
+      session.index + (remaining ? 1 + Math.floor(random() * remaining) : 0);
+    question.skipped = false;
+    question.selected = null;
+    question.eliminated = [];
+    question.revealed = false;
+    question.options = shuffle(question.options, random);
+    session.questions.splice(position, 0, question);
+    return true;
+  }
   if (!session.responses[session.index]) return false;
   session.index++;
   return true;

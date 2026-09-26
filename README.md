@@ -7,11 +7,11 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 ## Practice
 
 - Click **Start practicing** for shuffled multiple-choice questions.
-- Sessions mix English → Spanish and Spanish → English questions by default, alternating languages with a random starting language. You can also select a single direction. Choose 10, 20, or all 98 questions.
+- Sessions mix English → Spanish and Spanish → English questions by default, initially alternating languages with a random starting language; skipped questions may change that order. You can also select a single direction. Choose 10, 20, or all 98 questions.
 - Select an answer, then press **Confirm answer**. You can change your selection before confirming. Correct answers display a large green **Correct!** banner.
 - Track **correct out of answered**. Each question counts only once.
 - **Hint** removes two wrong choices, without counting an answer.
-- **Skip** counts as answered but not correct. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
+- **Skip** leaves the score and answered count unchanged. After you continue, the question returns at a random position among the remaining questions. It will not repeat immediately unless it is the only unanswered question left. A session finishes only after every question has a confirmed answer. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
 - Review your results and practice only missed terms in a fresh session.
 - Browse or search all 98 terms in Vocabulary. Switching tabs preserves the session; returning to setup or reloading starts fresh.
 - Use keys **1–4** to select an answer, or Tab and Enter to navigate. There is no timer.

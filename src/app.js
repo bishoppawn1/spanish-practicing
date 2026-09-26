@@ -1,12 +1,12 @@
-import { cards } from "./cards.js?v=20260925-3";
+import { cards } from "./cards.js?v=20260925-4";
 import {
   createSession,
-  answerQuestion,
+  skipQuestion,
   advanceQuestion,
   useHint,
   selectAnswer,
   confirmAnswer,
-} from "./quiz.js?v=20260925-3";
+} from "./quiz.js?v=20260925-4";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -66,10 +66,14 @@ function renderQuestion(focusTarget) {
   if (session.index >= session.questions.length) return showResults();
   setScreen("question");
   const question = session.questions[session.index];
-  const response = session.responses[session.index];
+  const response =
+    session.responses[session.index] ??
+    (session.questions[session.index]?.skipped
+      ? { correct: false, choice: null }
+      : null);
   const showCorrect = response && (response.correct || question.revealed);
   const total = session.questions.length;
-  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">CHOOSE THE ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.revealed ? `<span>Correct answer: ${escapeHtml(question.answer)}</span>` : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}<div class="answers">${question.options
+  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">CHOOSE THE ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.revealed ? `<span>Correct answer: ${escapeHtml(question.answer)}</span>` : question.skipped ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}<div class="answers">${question.options
     .map((option, index) => {
       const right = showCorrect && option === question.answer;
       const wrong = response && !response.correct && option === response.choice;
@@ -79,7 +83,7 @@ function renderQuestion(focusTarget) {
     })
     .join(
       "",
-    )}</div><div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools"><button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button><button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button></div><button id="confirm" class="primary" ${question.selected === null ? "disabled" : ""}>Confirm answer</button>`}</div></div></section>`;
+    )}</div><div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${!question.skipped && session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools"><button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button><button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button></div><button id="confirm" class="primary" ${question.selected === null ? "disabled" : ""}>Confirm answer</button>`}</div></div></section>`;
   document.querySelector("#back").onclick = () => {
     session = null;
     showHome();
@@ -107,7 +111,12 @@ function renderQuestion(focusTarget) {
         announceResult();
       }
     };
-    document.querySelector("#skip").onclick = () => submitAnswer(null);
+    document.querySelector("#skip").onclick = () => {
+      if (skipQuestion(session)) {
+        renderQuestion();
+        announceResult();
+      }
+    };
     document.querySelector("#hint").onclick = () => {
       if (useHint(session)) renderQuestion("answer");
     };
@@ -122,18 +131,16 @@ function chooseAnswer(choice) {
   if (selectAnswer(session, choice)) renderQuestion("selection");
 }
 function announceResult() {
-  const response = session.responses[session.index];
+  const response =
+    session.responses[session.index] ??
+    (session.questions[session.index]?.skipped
+      ? { correct: false, choice: null }
+      : null);
   document.querySelector("#announcement").textContent = response.correct
     ? `Correct! ${session.correct} correct out of ${session.answered} answered.`
     : response.choice === null
-      ? "Question skipped."
+      ? "Question skipped. It remains unanswered and will appear again."
       : "Incorrect. You can show the correct answer or continue.";
-}
-function submitAnswer(choice) {
-  if (answerQuestion(session, choice)) {
-    renderQuestion();
-    announceResult();
-  }
 }
 function nextQuestion() {
   document.querySelector("#announcement").textContent = "";
