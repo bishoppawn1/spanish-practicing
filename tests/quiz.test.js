@@ -117,3 +117,44 @@ test("hints remove only two wrong options, can only be used once, and do not cha
   assert.equal(session.responses[0].hinted, true);
   assert.equal(useHint(session), false);
 });
+
+test("mixed sessions use both languages with matching prompts and answer languages", () => {
+  for (const random of [() => 0.25, () => 0.75]) {
+    for (const count of [1, 2, 10, 20, 98]) {
+      const session = createSession(cards, cards, { count, random });
+      const spanish = session.questions.filter(
+        (q) => q.direction === "es-en",
+      ).length;
+      assert.ok(Math.abs(spanish - (count - spanish)) <= 1);
+      assert.equal(
+        new Set(session.questions.map((q) => q.card.id)).size,
+        count,
+      );
+      for (const [index, question] of session.questions.entries()) {
+        const spanishPrompt = question.direction === "es-en";
+        assert.equal(
+          question.prompt,
+          question.card[spanishPrompt ? "es" : "en"],
+        );
+        assert.equal(
+          question.answer,
+          question.card[spanishPrompt ? "en" : "es"],
+        );
+        if (index)
+          assert.notEqual(
+            question.direction,
+            session.questions[index - 1].direction,
+          );
+      }
+    }
+  }
+});
+
+test("single-direction sessions retain the selected language", () => {
+  for (const direction of ["es-en", "en-es"]) {
+    const session = createSession(cards, cards, { direction, count: 10 });
+    assert.ok(
+      session.questions.every((question) => question.direction === direction),
+    );
+  }
+});

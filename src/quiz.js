@@ -35,6 +35,7 @@ export function makeQuestion(
   }
   return {
     card,
+    direction,
     prompt: card[promptKey],
     answer: card[answerKey],
     options: shuffle([card[answerKey], ...distractors], random),
@@ -44,12 +45,24 @@ export function makeQuestion(
 export function createSession(
   selected,
   pool,
-  { direction = "es-en", count = selected.length, random = Math.random } = {},
+  { direction = "mixed", count = selected.length, random = Math.random } = {},
 ) {
+  const firstDirection =
+    direction === "mixed" && random() < 0.5 ? "en-es" : "es-en";
   return {
     questions: shuffle(selected, random)
       .slice(0, count)
-      .map((card) => makeQuestion(card, pool, direction, random)),
+      .map((card, index) => {
+        const questionDirection =
+          direction === "mixed"
+            ? index % 2 === 0
+              ? firstDirection
+              : firstDirection === "es-en"
+                ? "en-es"
+                : "es-en"
+            : direction;
+        return makeQuestion(card, pool, questionDirection, random);
+      }),
     direction,
     index: 0,
     correct: 0,

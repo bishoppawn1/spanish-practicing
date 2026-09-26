@@ -7,7 +7,7 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 ## Practice
 
 - Click **Start practicing** for shuffled multiple-choice questions.
-- Choose Spanish → English or English → Spanish, with 10, 20, or all 98 questions.
+- Sessions mix English → Spanish and Spanish → English questions by default, alternating languages with a random starting language. You can also select a single direction. Choose 10, 20, or all 98 questions.
 - Track **correct out of answered**. Each question counts only once.
 - **Hint** removes two wrong choices, without counting an answer.
 - **Skip** counts as answered but not correct. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
