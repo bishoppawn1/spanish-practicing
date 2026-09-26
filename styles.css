@@ -368,6 +368,38 @@ progress::-moz-progress-bar {
   color: var(--muted);
   margin-bottom: 24px;
 }
+.typed-answer {
+  max-width: 760px;
+}
+.typed-answer > label {
+  display: block;
+  margin-bottom: 10px;
+}
+.typed-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+.typed-controls input {
+  flex: 1;
+  min-width: 0;
+  min-height: 62px;
+  padding: 14px 18px;
+  border: 1px solid #738399;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 20px;
+}
+.typed-controls .secondary {
+  white-space: nowrap;
+}
+.speech-status {
+  min-height: 24px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
 .answers {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -619,6 +651,9 @@ input::placeholder {
     font-size: 18px;
     min-height: 105px;
     padding: 20px 16px 30px;
+  }
+  .typed-controls {
+    flex-direction: column;
   }
   .feedback-actions > button {
     font-size: 14px;

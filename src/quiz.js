@@ -8,6 +8,8 @@ export function shuffle(items, random = Math.random) {
 }
 export const normalize = (text) =>
   text.toLocaleLowerCase().replace(/[\p{P}\s]/gu, "");
+const normalizeTypedAnswer = (text) =>
+  normalize(text.normalize("NFD").replace(/\p{Diacritic}/gu, ""));
 
 function answerKind(card, key) {
   const text = card[key];
@@ -86,7 +88,12 @@ export function makeQuestion(
 export function createSession(
   selected,
   pool,
-  { direction = "mixed", count = selected.length, random = Math.random } = {},
+  {
+    direction = "mixed",
+    count = selected.length,
+    mode = "multiple-choice",
+    random = Math.random,
+  } = {},
 ) {
   const firstDirection =
     direction === "mixed" && random() < 0.5 ? "en-es" : "es-en";
@@ -105,6 +112,7 @@ export function createSession(
         return makeQuestion(card, pool, questionDirection, random);
       }),
     direction,
+    mode,
     index: 0,
     correct: 0,
     answered: 0,
@@ -127,6 +135,29 @@ export function answerQuestion(session, choice) {
     choice,
     correct,
     hinted: question.eliminated.length > 0,
+  });
+  session.answered++;
+  if (correct) session.correct++;
+  return true;
+}
+export function submitTypedAnswer(session, response) {
+  const question = session.questions[session.index];
+  if (
+    !question ||
+    question.skipped ||
+    session.responses[session.index] ||
+    !response.trim()
+  )
+    return false;
+  const acceptedAnswers = question.answer.split(/\s\/\s/);
+  const correct = acceptedAnswers.some(
+    (answer) => normalizeTypedAnswer(response) === normalizeTypedAnswer(answer),
+  );
+  session.responses.push({
+    card: question.card,
+    choice: response.trim(),
+    correct,
+    hinted: false,
   });
   session.answered++;
   if (correct) session.correct++;

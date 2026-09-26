@@ -6,17 +6,18 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 
 ## Practice
 
-- Click **Start practicing** for shuffled multiple-choice questions.
+- Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available; confirm the answer before it is scored.
+- Click **Start practicing** for shuffled questions.
 - Sessions mix English → Spanish and Spanish → English questions by default, initially alternating languages with a random starting language; skipped questions may change that order. You can also select a single direction. Choose 10, 20, or all 98 questions.
-- Select an answer, then press **Confirm answer**. You can change your selection before confirming. Correct answers display a large green **Correct!** banner.
+- In multiple-choice mode, select an answer; in typed mode, enter or dictate one. Press **Confirm answer** to submit. Correct answers display a large green **Correct!** banner.
 - Track **correct out of answered**. Each question counts only once.
 - The **Skipped** counter records each skip during the session, including skipping the same question again. It stays separate from the score and resets with a new session.
-- **Hint** removes two wrong choices, without counting an answer. Distractors match the kind of answer requested where the set has enough choices.
+- In multiple-choice mode, **Hint** removes two wrong choices, without counting an answer. Distractors match the kind of answer requested where the set has enough choices.
 - Related distractors prioritize the formal/familiar versions of the same name, age, and origin questions when available. Source slash-separated answers stay intact.
 - **Skip** leaves the score and answered count unchanged. After you continue, the question returns at a random position among the remaining questions. It will not repeat immediately unless it is the only unanswered question left. A session finishes only after every question has a confirmed answer. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
 - Review your results and practice only missed terms in a fresh session.
 - Browse or search all 98 terms in Vocabulary. Switching tabs preserves the session; returning to setup or reloading starts fresh.
-- Use keys **1–4** to select an answer, or Tab and Enter to navigate. There is no timer.
+- Use keys **1–4** to select a multiple-choice answer, or Tab and Enter to navigate. There is no timer.
 
 ## Development
 

@@ -12,6 +12,7 @@ import {
   selectAnswer,
   confirmAnswer,
   skipQuestion,
+  submitTypedAnswer,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -162,6 +163,31 @@ test("single-direction sessions retain the selected language", () => {
       session.questions.every((question) => question.direction === direction),
     );
   }
+});
+
+test("typed answers confirm once, accept slash alternatives and ignore accents", () => {
+  const slashCard = cards.find((card) => card.es === "Perdón / Lo siento");
+  const session = createSession([slashCard], cards, {
+    direction: "en-es",
+    mode: "typed",
+  });
+  const question = session.questions[0];
+  assert.equal(session.mode, "typed");
+  assert.equal(submitTypedAnswer(session, "  "), false);
+  assert.equal(session.answered, 0);
+  assert.equal(submitTypedAnswer(session, "lo siento"), true);
+  assert.equal(session.responses[0].correct, true);
+  assert.equal(session.correct, 1);
+  assert.equal(session.answered, 1);
+  assert.equal(submitTypedAnswer(session, question.answer), false);
+
+  const accentedCard = cards.find((card) => card.es === "miércoles");
+  const accentSession = createSession([accentedCard], cards, {
+    direction: "en-es",
+    mode: "typed",
+  });
+  assert.equal(submitTypedAnswer(accentSession, "miercoles"), true);
+  assert.equal(accentSession.correct, 1);
 });
 
 test("selection is changeable and only confirmation counts an answer once", () => {
