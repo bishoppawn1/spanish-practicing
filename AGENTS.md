@@ -8,7 +8,7 @@ A text-only Spanish vocabulary app using all 98 cards in the README's Quizlet se
 
 - Read this file and README before editing.
 - Preserve Start practicing, four-choice questions, immediate feedback, hints, skipping, and the correct-out-of-answered score. Count each question only once. Skipped questions return to the remaining random pool and never affect correct, answered, or missed counts. Only confirmed answers count. Track total skip actions in a separate Skipped counter, including repeat skips; reset it for each new session. Hints do not count as answers.
-- After a wrong answer or skip, keep the correct answer hidden. Show an optional **Show correct answer** button beside **Continue to next question**; revealing must not change the score.
+- Keep **Show correct answer** available before a response in both practice modes, as a separate control. Revealing must not change the score or prevent the learner from answering. After a wrong answer or skip, also show **Show correct answer** beside **Continue to next question**; keep the answer hidden unless the learner reveals it.
 - Use a dark theme and a large, readable question area. Selecting an option must not submit it: require **Confirm answer**. Announce correct answers with a prominent factual banner and accessible status.
 - Keep the interface factual and minimal: no motivational phrases, category badges, keyboard-tip copy, or footer links. Default to questions in both languages.
 - Keep all 98 source cards available, without flashcard images. Document translation corrections.
