@@ -83,6 +83,7 @@ test("correct, wrong, double-click, completion, and missed-card retry scoring", 
     .map((response) => response.card);
   const retry = createSession(missed, cards);
   assert.equal(retry.questions.length, 1);
+  assert.equal(retry.skipCount, 0);
   assert.equal(retry.correct, 0);
   assert.equal(retry.answered, 0);
   assert.ok(retry.questions.every((question) => question.options.length === 4));
@@ -212,6 +213,7 @@ test("skips return to a random pending position without counting or duplicating 
     useHint(session);
     assert.equal(skipQuestion(session), true);
     assert.equal(skipQuestion(session), false);
+    assert.equal(session.skipCount, 1);
     assert.equal(confirmAnswer(session), false);
     assert.equal(selectAnswer(session, skipped.answer), false);
     assert.equal(useHint(session), false);
@@ -241,6 +243,7 @@ test("all 98 questions can be skipped and still require 98 unique confirmed answ
     advanceQuestion(session, () => 0.999);
   }
   assert.equal(skippedIds.size, 98);
+  assert.equal(session.skipCount, 98);
   assert.equal(session.answered, 0);
   assert.equal(session.correct, 0);
   assert.equal(session.index, 0);
@@ -250,6 +253,7 @@ test("all 98 questions can be skipped and still require 98 unique confirmed answ
     confirmAnswer(session);
     advanceQuestion(session);
   }
+  assert.equal(session.skipCount, 98);
   assert.equal(session.correct, 98);
   assert.equal(session.answered, 98);
   assert.equal(new Set(session.responses.map((r) => r.card.id)).size, 98);
@@ -267,6 +271,7 @@ test("skipping the last pending question cannot finish the session", () => {
   for (let i = 0; i < 3; i++) {
     skipQuestion(session);
     advanceQuestion(session);
+    assert.equal(session.skipCount, i + 1);
     assert.equal(session.index, 1);
     assert.equal(session.answered, 1);
     assert.equal(session.correct, 0);

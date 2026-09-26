@@ -68,6 +68,7 @@ export function createSession(
     index: 0,
     correct: 0,
     answered: 0,
+    skipCount: 0,
     responses: [],
   };
 }
@@ -130,6 +131,7 @@ export function skipQuestion(session) {
   if (!question || question.skipped || session.responses[session.index])
     return false;
   question.skipped = true;
+  session.skipCount++;
   return true;
 }
 export function advanceQuestion(session, random = Math.random) {

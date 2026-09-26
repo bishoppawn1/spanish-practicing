@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260925-4";
+import { cards } from "./cards.js?v=20260925-5";
 import {
   createSession,
   skipQuestion,
@@ -6,7 +6,7 @@ import {
   useHint,
   selectAnswer,
   confirmAnswer,
-} from "./quiz.js?v=20260925-4";
+} from "./quiz.js?v=20260925-5";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -73,7 +73,7 @@ function renderQuestion(focusTarget) {
       : null);
   const showCorrect = response && (response.correct || question.revealed);
   const total = session.questions.length;
-  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">CHOOSE THE ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.revealed ? `<span>Correct answer: ${escapeHtml(question.answer)}</span>` : question.skipped ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}<div class="answers">${question.options
+  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">CHOOSE THE ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.revealed ? `<span>Correct answer: ${escapeHtml(question.answer)}</span>` : question.skipped ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}<div class="answers">${question.options
     .map((option, index) => {
       const right = showCorrect && option === question.answer;
       const wrong = response && !response.correct && option === response.choice;
@@ -139,7 +139,7 @@ function announceResult() {
   document.querySelector("#announcement").textContent = response.correct
     ? `Correct! ${session.correct} correct out of ${session.answered} answered.`
     : response.choice === null
-      ? "Question skipped. It remains unanswered and will appear again."
+      ? `Question skipped. ${session.skipCount} skipped so far. It remains unanswered and will appear again.`
       : "Incorrect. You can show the correct answer or continue.";
 }
 function nextQuestion() {
@@ -153,7 +153,7 @@ function showResults() {
     .filter((response) => !response.correct)
     .map((response) => response.card);
   const percentage = Math.round((session.correct / session.answered) * 100);
-  main.innerHTML = `<section class="results"><h1 tabindex="-1">Session results</h1><div class="result-score"><strong>${session.correct}<span> / ${session.answered}</span></strong><p>correct out of ${session.answered} answered</p><span class="pill">${percentage}% ACCURACY</span></div><div class="result-actions">${missed.length ? `<button id="retry" class="primary">Practice ${missed.length} missed ${missed.length === 1 ? "term" : "terms"} ${arrow}</button>` : ""}<button id="again" class="${missed.length ? "secondary" : "primary"}">Practice again ↗</button><button id="setup" class="text-button">Back to setup</button></div>${missed.length ? `<div class="review"><h2>Missed terms</h2>${missed.map((card) => `<div class="review-row"><span lang="es">${escapeHtml(card.es)}</span><span>${escapeHtml(card.en)}</span></div>`).join("")}</div>` : ""}</section>`;
+  main.innerHTML = `<section class="results"><h1 tabindex="-1">Session results</h1><div class="result-score"><strong>${session.correct}<span> / ${session.answered}</span></strong><p>correct out of ${session.answered} answered</p><p>${session.skipCount} skipped</p><span class="pill">${percentage}% ACCURACY</span></div><div class="result-actions">${missed.length ? `<button id="retry" class="primary">Practice ${missed.length} missed ${missed.length === 1 ? "term" : "terms"} ${arrow}</button>` : ""}<button id="again" class="${missed.length ? "secondary" : "primary"}">Practice again ↗</button><button id="setup" class="text-button">Back to setup</button></div>${missed.length ? `<div class="review"><h2>Missed terms</h2>${missed.map((card) => `<div class="review-row"><span lang="es">${escapeHtml(card.es)}</span><span>${escapeHtml(card.en)}</span></div>`).join("")}</div>` : ""}</section>`;
   if (missed.length)
     document.querySelector("#retry").onclick = () => startSession(missed);
   document.querySelector("#again").onclick = () => startSession(cards, count);
