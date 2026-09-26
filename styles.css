@@ -368,6 +368,20 @@ progress::-moz-progress-bar {
   color: var(--muted);
   margin-bottom: 24px;
 }
+.revealed-answer {
+  margin: -14px 0 28px;
+  padding: 18px 20px;
+  border: 1px solid #638d73;
+  border-radius: 10px;
+  background: #1e392c;
+  color: #c7f3d4;
+  font-size: 18px;
+  line-height: 1.5;
+}
+.revealed-answer strong {
+  margin-left: 6px;
+  color: #f0fff4;
+}
 .typed-answer {
   max-width: 760px;
 }
