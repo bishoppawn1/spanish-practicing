@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f7f3" />
+    <meta
+      name="description"
+      content="A little Spanish, every day. Practice 98 Spanish greetings, introductions, calendar, and weather terms with multiple-choice questions."
+    />
+    <title>¡Hola! — Spanish Practicing</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to practice</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Hola, Spanish Practicing home"
+        ><span class="brand-mark" lang="es">¡h!</span
+        ><span>¡Hola!<small>SPANISH PRACTICING</small></span></a
+      >
+      <nav aria-label="Main navigation">
+        <button id="practice-tab" class="nav-item active" aria-current="page">
+          Practice</button
+        ><button id="vocabulary-tab" class="nav-item">
+          Vocabulary <span>98</span>
+        </button>
+      </nav>
+      <span class="header-note"
+        ><span class="status-dot"></span>A little progress, every day.</span
+      >
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="site-footer">
+      <span>Small steps. More conversations.</span
+      ><a
+        href="https://quizlet.com/1203332246/spanish-greetings-and-introductions-wes-flash-cards/"
+        target="_blank"
+        rel="noreferrer"
+        >Original Quizlet set ↗</a
+      >
+    </footer>
+    <noscript
+      >Please enable JavaScript to practice this vocabulary set.</noscript
+    >
+  </body>
+</html>

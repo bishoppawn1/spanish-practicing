@@ -1,1 +1,45 @@
-# spanish-practicing
+# ¡Hola! — Spanish Practicing
+
+**[Open the app on GitHub Pages](https://bishoppawn1.github.io/spanish-practicing/)**
+
+A text-only learning app for Spanish greetings, introductions, calendar vocabulary, and weather. Includes all 98 cards from [Spanish Greetings and Introductions Wes](https://quizlet.com/1203332246/spanish-greetings-and-introductions-wes-flash-cards/) by Maritza_Wesberry. No flashcard images, accounts, backend, or API keys.
+
+## Practice
+
+- Click **Start practicing** for shuffled multiple-choice questions.
+- Choose Spanish → English or English → Spanish, with 10, 20, or all 98 questions.
+- Track **correct out of answered**. Each question counts only once.
+- **Hint** removes two wrong choices, without counting an answer.
+- **Skip** counts as answered but not correct. After a wrong answer or skip, the correct answer stays hidden until you choose **Show correct answer**. The adjacent **Continue to next question** button lets you move on without revealing it.
+- Review your results and practice only missed terms in a fresh session.
+- Browse or search all 98 terms in Vocabulary. Switching tabs preserves the session; returning to setup or reloading starts fresh.
+- Use keys **1–4** for answers, or Tab and Enter to navigate. There is no timer.
+
+## Development
+
+Use Node.js 22+ for tests/build and Python 3 for the preview server. No npm dependencies need to be installed.
+
+```sh
+npm run dev
+```
+
+Open http://127.0.0.1:5173. JavaScript modules require HTTP instead of opening `index.html` directly.
+
+```sh
+npm test
+npm run build
+```
+
+`dist/` contains only publishable static files. Relative paths support the GitHub Pages project URL. Google Fonts supplies typography with local sans-serif fallbacks; all learning content and app logic are bundled locally.
+
+## GitHub Pages
+
+The workflow tests, builds, and deploys pushes to `main`. In **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions** once. Then run **Test and deploy GitHub Pages** from Actions, or push a commit. The app is published at:
+
+https://bishoppawn1.github.io/spanish-practicing/
+
+## Vocabulary source notes
+
+All 98 source entries are included, including synonymous cards. Images are intentionally omitted. Accents, capitalization, spacing, apostrophes, and ellipses were lightly standardized (for example, `Perdón`, `mío`, `Quién`, `días`, and `frío`). The source's `el profesor / el maestro` translation was corrected from “teacher (male/female)” to “teacher (male).” Equivalent or overlapping translations are excluded from each other's distractor choices to avoid ambiguous questions.
+
+Edit vocabulary and equivalence groups in `src/cards.js`. Keep the source link and notes up to date. Agent workflow and push requirements are in [AGENTS.md](./AGENTS.md).
