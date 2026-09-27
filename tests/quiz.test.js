@@ -190,6 +190,24 @@ test("typed answers confirm once, accept slash alternatives and ignore accents",
   assert.equal(accentSession.correct, 1);
 });
 
+test("typed translations do not require formal or familiar labels", () => {
+  const familiar = cards.find((card) => card.es === "¿De dónde eres?");
+  const familiarSession = createSession([familiar], cards, {
+    direction: "es-en",
+    mode: "typed",
+  });
+  assert.equal(submitTypedAnswer(familiarSession, "where are you from"), true);
+  assert.equal(familiarSession.correct, 1);
+
+  const formal = cards.find((card) => card.es === "¿De dónde es usted?");
+  const formalSession = createSession([formal], cards, {
+    direction: "es-en",
+    mode: "typed",
+  });
+  assert.equal(submitTypedAnswer(formalSession, "where are you from"), true);
+  assert.equal(formalSession.correct, 1);
+});
+
 test("selection is changeable and only confirmation counts an answer once", () => {
   const session = createSession(cards, cards, { count: 2 });
   const question = session.questions[0];

@@ -9,7 +9,12 @@ export function shuffle(items, random = Math.random) {
 export const normalize = (text) =>
   text.toLocaleLowerCase().replace(/[\p{P}\s]/gu, "");
 const normalizeTypedAnswer = (text) =>
-  normalize(text.normalize("NFD").replace(/\p{Diacritic}/gu, ""));
+  normalize(
+    text
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/\s*\((?:formal|familiar)\)\s*$/i, ""),
+  );
 
 function answerKind(card, key) {
   const text = card[key];

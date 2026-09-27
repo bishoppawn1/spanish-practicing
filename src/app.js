@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260926-4";
+import { cards } from "./cards.js?v=20260926-5";
 import {
   createSession,
   skipQuestion,
@@ -7,7 +7,7 @@ import {
   selectAnswer,
   confirmAnswer,
   submitTypedAnswer,
-} from "./quiz.js?v=20260926-4";
+} from "./quiz.js?v=20260926-5";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
