@@ -15,6 +15,27 @@ const normalizeTypedAnswer = (text) =>
       .replace(/\p{Diacritic}/gu, "")
       .replace(/\s*\((?:formal|familiar)\)\s*$/i, ""),
   );
+function typedAnswerVariants(answer) {
+  let variants = [answer];
+  if (/\(name\)/i.test(answer))
+    variants = [
+      ...variants,
+      ...variants.map((value) => value.replace(/\s*\(name\)/gi, "")),
+    ];
+  if (/\(yo\)/i.test(answer))
+    variants = [
+      ...variants,
+      ...variants.map((value) => value.replace(/\(yo\)\s*/gi, "")),
+    ];
+  if (/o\(a\)/i.test(answer)) {
+    variants = [
+      ...variants,
+      ...variants.map((value) => value.replace(/\(a\)/gi, "")),
+      ...variants.map((value) => value.replace(/o\s*\(a\)/gi, "a")),
+    ];
+  }
+  return [...new Set(variants.map(normalizeTypedAnswer))];
+}
 
 function answerKind(card, key) {
   const text = card[key];
@@ -154,10 +175,10 @@ export function submitTypedAnswer(session, response) {
     !response.trim()
   )
     return false;
-  const acceptedAnswers = question.answer.split(/\s\/\s/);
-  const correct = acceptedAnswers.some(
-    (answer) => normalizeTypedAnswer(response) === normalizeTypedAnswer(answer),
-  );
+  const acceptedAnswers = question.answer
+    .split(/\s\/\s/)
+    .flatMap(typedAnswerVariants);
+  const correct = acceptedAnswers.includes(normalizeTypedAnswer(response));
   session.responses.push({
     card: question.card,
     choice: response.trim(),

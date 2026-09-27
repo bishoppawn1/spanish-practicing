@@ -248,6 +248,28 @@ test("typed Spanish answers preserve formal and familiar grammar", () => {
   }
 });
 
+test("typed Spanish answers treat instructional parentheticals as optional", () => {
+  const greeting = cards.find((card) => card.es === "Encantado(a).");
+  for (const answer of ["encantado", "encantada"]) {
+    const session = createSession([greeting], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+    assert.equal(submitTypedAnswer(session, answer), true);
+    assert.equal(session.responses[0].correct, true);
+  }
+
+  const name = cards.find((card) => card.es === "(Yo) me llamo (name)");
+  for (const answer of ["me llamo", "yo me llamo"]) {
+    const session = createSession([name], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+    assert.equal(submitTypedAnswer(session, answer), true);
+    assert.equal(session.responses[0].correct, true);
+  }
+});
+
 test("selection is changeable and only confirmation counts an answer once", () => {
   const session = createSession(cards, cards, { count: 2 });
   const question = session.questions[0];

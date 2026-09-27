@@ -9,7 +9,7 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 - Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available; confirm the answer before it is scored.
 - Click **Start practicing** for shuffled questions.
 - Sessions mix English → Spanish and Spanish → English questions by default, initially alternating languages with a random starting language; skipped questions may change that order. You can also select a single direction. Choose 10, 20, or all 98 questions.
-- In multiple-choice mode, select an answer; in typed mode, enter or dictate one. Press **Confirm answer** to submit. Formal/familiar labels in parentheses are optional when typing translations. Correct answers display a large green **Correct!** banner.
+- In multiple-choice mode, select an answer; in typed mode, enter or dictate one. Press **Confirm answer** to submit. Formal/familiar labels, `(Yo)`, `(name)`, and gender endings such as `(a)` are optional when typing; the masculine and feminine forms are accepted. Spanish formal/familiar verb forms still need to match the prompt. Correct answers display a large green **Correct!** banner.
 - Track **correct out of answered**. Each question counts only once.
 - The **Skipped** counter records each skip during the session, including skipping the same question again. It stays separate from the score and resets with a new session.
 - In multiple-choice mode, **Hint** removes two wrong choices, without counting an answer. Distractors match the kind of answer requested where the set has enough choices.
