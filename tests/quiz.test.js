@@ -313,6 +313,18 @@ test("typed answers accept contractions, expanded phrases, and title abbreviatio
   }
 });
 
+test("typed answers accept either form of slash-marked Spanish gender endings", () => {
+  const card = cards.find((item) => item.es === "mi mejor amigo /a");
+  for (const answer of ["mi mejor amigo", "mi mejor amiga", "mi mejor amigo/a"]) {
+    const session = createSession([card], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+    assert.equal(submitTypedAnswer(session, answer), true, answer);
+    assert.equal(session.responses[0].correct, true, answer);
+  }
+});
+
 test("selection is changeable and only confirmation counts an answer once", () => {
   const session = createSession(cards, cards, { count: 2 });
   const question = session.questions[0];

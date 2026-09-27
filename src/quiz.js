@@ -96,6 +96,13 @@ function typedAnswerVariants(answer) {
       ...variants.map((value) => value.replace(/o\s*\(a\)/gi, "a")),
     ];
   }
+  if (/o\s*\/\s*a\b/i.test(answer)) {
+    variants = [
+      ...variants,
+      ...variants.map((value) => value.replace(/o\s*\/\s*a\b/gi, "o")),
+      ...variants.map((value) => value.replace(/o\s*\/\s*a\b/gi, "a")),
+    ];
+  }
   return [...new Set(variants.map(normalizeTypedAnswer))];
 }
 
