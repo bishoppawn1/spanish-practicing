@@ -181,6 +181,19 @@ test("typed answers confirm once, accept slash alternatives and ignore accents",
   assert.equal(session.answered, 1);
   assert.equal(submitTypedAnswer(session, question.answer), false);
 
+  for (const direction of ["en-es", "es-en"]) {
+    const combinedSession = createSession([slashCard], cards, {
+      direction,
+      mode: "typed",
+    });
+    assert.equal(
+      submitTypedAnswer(combinedSession, combinedSession.questions[0].answer),
+      true,
+      `the full displayed answer should be accepted for ${direction}`,
+    );
+    assert.equal(combinedSession.responses[0].correct, true);
+  }
+
   const accentedCard = cards.find((card) => card.es === "miércoles");
   const accentSession = createSession([accentedCard], cards, {
     direction: "en-es",

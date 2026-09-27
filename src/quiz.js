@@ -237,9 +237,10 @@ export function submitTypedAnswer(session, response) {
     !response.trim()
   )
     return false;
-  const acceptedAnswers = question.answer
-    .split(/\s\/\s/)
-    .flatMap(typedAnswerVariants);
+  const acceptedAnswers = [
+    ...typedAnswerVariants(question.answer),
+    ...question.answer.split(/\s\/\s/).flatMap(typedAnswerVariants),
+  ];
   const correct = acceptedAnswers.includes(normalizeTypedAnswer(response));
   session.responses.push({
     card: question.card,
