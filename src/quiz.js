@@ -8,13 +8,68 @@ export function shuffle(items, random = Math.random) {
 }
 export const normalize = (text) =>
   text.toLocaleLowerCase().replace(/[\p{P}\s]/gu, "");
-const normalizeTypedAnswer = (text) =>
-  normalize(
-    text
-      .normalize("NFD")
-      .replace(/\p{Diacritic}/gu, "")
-      .replace(/\s*\((?:formal|familiar)\)\s*$/i, ""),
-  );
+const answerWordForms = {
+  "i'm": "i am",
+  "you're": "you are",
+  "we're": "we are",
+  "they're": "they are",
+  "he's": "he is",
+  "she's": "she is",
+  "it's": "it is",
+  "that's": "that is",
+  "there's": "there is",
+  "here's": "here is",
+  "what's": "what is",
+  "who's": "who is",
+  "where's": "where is",
+  "when's": "when is",
+  "how's": "how is",
+  "let's": "let us",
+  "i've": "i have",
+  "you've": "you have",
+  "we've": "we have",
+  "they've": "they have",
+  "i'll": "i will",
+  "you'll": "you will",
+  "we'll": "we will",
+  "they'll": "they will",
+  "don't": "do not",
+  "doesn't": "does not",
+  "didn't": "did not",
+  "isn't": "is not",
+  "aren't": "are not",
+  "wasn't": "was not",
+  "weren't": "were not",
+  "can't": "cannot",
+  "couldn't": "could not",
+  "won't": "will not",
+  "wouldn't": "would not",
+  "shouldn't": "should not",
+  "ma'am": "madam",
+  "mr.": "mister",
+  mr: "mister",
+  "mrs.": "missus",
+  mrs: "missus",
+  "sr.": "senor",
+  sr: "senor",
+  "sra.": "senora",
+  sra: "senora",
+  "srta.": "senorita",
+  srta: "senorita",
+};
+const normalizeTypedAnswer = (text) => {
+  const canonical = text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/’/g, "'")
+    .replace(/\s*\((?:formal|familiar)\)\s*$/i, "")
+    .replace(
+      /\b(?:[\p{L}]+[''][\p{L}]+|mrs?\.?|srta?\.?|sra\.?)\b/gu,
+      (word) => answerWordForms[word] ?? word,
+    );
+  return normalize(canonical);
+};
 function typedAnswerVariants(answer) {
   let variants = [answer];
   if (/\(name\)/i.test(answer))
@@ -26,6 +81,13 @@ function typedAnswerVariants(answer) {
     variants = [
       ...variants,
       ...variants.map((value) => value.replace(/\(yo\)\s*/gi, "")),
+    ];
+  if (/\([A-Z][A-Za-z]{1,4}\.\)/i.test(answer))
+    variants = [
+      ...variants,
+      ...variants.map((value) =>
+        value.replace(/\s*\([A-Z][A-Za-z]{1,4}\.\)/gi, ""),
+      ),
     ];
   if (/o\(a\)/i.test(answer)) {
     variants = [

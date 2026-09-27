@@ -270,6 +270,36 @@ test("typed Spanish answers treat instructional parentheticals as optional", () 
   }
 });
 
+test("typed answers accept contractions, expanded phrases, and title abbreviations", () => {
+  const cases = [
+    { es: "Yo soy de…", direction: "es-en", answer: "I am from" },
+    {
+      es: "Estoy bien, gracias.",
+      direction: "es-en",
+      answer: "I am fine, thanks",
+    },
+    { es: "¿Qué tal?", direction: "es-en", answer: "What is up" },
+    { es: "Hace calor", direction: "es-en", answer: "It is hot" },
+    { es: "Hay relámpagos", direction: "es-en", answer: "There is lightning" },
+    { es: "señora (Sra.)", direction: "en-es", answer: "señora" },
+    { es: "señora (Sra.)", direction: "en-es", answer: "Sra." },
+    { es: "señor", direction: "es-en", answer: "sir, mister" },
+  ];
+  for (const { es, direction, answer } of cases) {
+    const card = cards.find((item) => item.es === es);
+    const session = createSession([card], cards, {
+      direction,
+      mode: "typed",
+    });
+    assert.equal(
+      submitTypedAnswer(session, answer),
+      true,
+      `${JSON.stringify(answer)} should be accepted for ${card[direction === "es-en" ? "en" : "es"]}`,
+    );
+    assert.equal(session.responses[0].correct, true);
+  }
+});
+
 test("selection is changeable and only confirmation counts an answer once", () => {
   const session = createSession(cards, cards, { count: 2 });
   const question = session.questions[0];
