@@ -13,6 +13,7 @@ import {
   confirmAnswer,
   skipQuestion,
   submitTypedAnswer,
+  weightedShuffle,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -54,6 +55,27 @@ test("sessions do not repeat cards; shuffling does not mutate vocabulary", () =>
     ids,
   );
   assert.equal(createSession(cards, cards, { count: 10 }).questions.length, 10);
+});
+
+test("weighted practice selection prioritizes missed cards and lowers done cards", () => {
+  const [done, missed, fresh] = cards;
+  const order = weightedShuffle(
+    [done, missed, fresh],
+    { [done.id]: 0.1, [missed.id]: 9, [fresh.id]: 1 },
+    () => 0.5,
+  );
+  assert.equal(order[0].id, missed.id);
+
+  const session = createSession([done, missed, fresh], cards, {
+    direction: "es-en",
+    weights: { [done.id]: 0.1, [missed.id]: 9, [fresh.id]: 1 },
+    random: () => 0.5,
+  });
+  assert.equal(session.questions[0].card.id, missed.id);
+  assert.equal(
+    new Set(session.questions.map((question) => question.card.id)).size,
+    3,
+  );
 });
 test("correct, wrong, double-click, completion, and missed-card retry scoring", () => {
   const session = createSession(cards, cards, { count: 3 });
@@ -319,7 +341,11 @@ test("typed answers accept contractions, expanded phrases, and title abbreviatio
 
 test("typed answers accept either form of slash-marked Spanish gender endings", () => {
   const card = cards.find((item) => item.es === "mi mejor amigo /a");
-  for (const answer of ["mi mejor amigo", "mi mejor amiga", "mi mejor amigo/a"]) {
+  for (const answer of [
+    "mi mejor amigo",
+    "mi mejor amiga",
+    "mi mejor amigo/a",
+  ]) {
     const session = createSession([card], cards, {
       direction: "en-es",
       mode: "typed",

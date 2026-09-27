@@ -8,6 +8,28 @@ export function shuffle(items, random = Math.random) {
 }
 export const normalize = (text) =>
   text.toLocaleLowerCase().replace(/[\p{P}\s]/gu, "");
+export function weightedShuffle(items, weights = {}, random = Math.random) {
+  const remaining = [...items];
+  const result = [];
+  const weightFor = (item) => {
+    const weight = Number(weights[item.id]);
+    return Number.isFinite(weight) && weight > 0 ? weight : 1;
+  };
+  while (remaining.length) {
+    const totalWeight = remaining.reduce(
+      (total, item) => total + weightFor(item),
+      0,
+    );
+    let pick = random() * totalWeight;
+    let index = remaining.findIndex((item) => {
+      pick -= weightFor(item);
+      return pick < 0;
+    });
+    if (index < 0) index = remaining.length - 1;
+    result.push(remaining.splice(index, 1)[0]);
+  }
+  return result;
+}
 const answerWordForms = {
   "i'm": "i am",
   "you're": "you are",
@@ -73,10 +95,7 @@ const normalizeTypedAnswer = (text) => {
 function typedAnswerVariants(answer) {
   let variants = [answer];
   if (/^(sir|ma'am),\s*(?:mr\.?|mrs\.?)$/i.test(answer))
-    variants = [
-      ...variants,
-      ...answer.split(/,\s*/),
-    ];
+    variants = [...variants, ...answer.split(/,\s*/)];
   if (/\(name\)/i.test(answer))
     variants = [
       ...variants,
@@ -192,13 +211,14 @@ export function createSession(
     direction = "mixed",
     count = selected.length,
     mode = "multiple-choice",
+    weights = {},
     random = Math.random,
   } = {},
 ) {
   const firstDirection =
     direction === "mixed" && random() < 0.5 ? "en-es" : "es-en";
   return {
-    questions: shuffle(selected, random)
+    questions: weightedShuffle(selected, weights, random)
       .slice(0, count)
       .map((card, index) => {
         const questionDirection =

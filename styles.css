@@ -356,6 +356,28 @@ progress::-moz-progress-bar {
   border: 1px solid var(--line);
   border-radius: 20px;
 }
+.question-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.known-toggle {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.known-toggle:hover,
+.known-toggle[aria-pressed="true"] {
+  color: #b8ffce;
+  background: #1e392c;
+  border-color: #638d73;
+}
 .question-card h1 {
   font-size: clamp(36px, 3.7vw, 54px);
   letter-spacing: -1px;
@@ -743,6 +765,14 @@ input::placeholder {
   }
   .eyebrow {
     font-size: 10px;
+  }
+  .question-meta {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .known-toggle {
+    font-size: 11px;
+    padding: 7px 9px;
   }
   .question-card h1 {
     font-size: 34px;
