@@ -191,21 +191,61 @@ test("typed answers confirm once, accept slash alternatives and ignore accents",
 });
 
 test("typed translations do not require formal or familiar labels", () => {
-  const familiar = cards.find((card) => card.es === "¿De dónde eres?");
-  const familiarSession = createSession([familiar], cards, {
-    direction: "es-en",
-    mode: "typed",
-  });
-  assert.equal(submitTypedAnswer(familiarSession, "where are you from"), true);
-  assert.equal(familiarSession.correct, 1);
+  const taggedTranslations = cards.filter((card) =>
+    /\((?:formal|familiar)\)$/i.test(card.en),
+  );
+  assert.ok(taggedTranslations.length > 0);
+  for (const card of taggedTranslations) {
+    const session = createSession([card], cards, {
+      direction: "es-en",
+      mode: "typed",
+    });
+    const withoutLabel = card.en.replace(/\s*\((?:formal|familiar)\)$/i, "");
+    assert.equal(
+      submitTypedAnswer(session, withoutLabel),
+      true,
+      `${card.es} should accept its translation without the formality label`,
+    );
+  }
+});
 
-  const formal = cards.find((card) => card.es === "¿De dónde es usted?");
-  const formalSession = createSession([formal], cards, {
-    direction: "es-en",
-    mode: "typed",
-  });
-  assert.equal(submitTypedAnswer(formalSession, "where are you from"), true);
-  assert.equal(formalSession.correct, 1);
+test("typed Spanish answers preserve formal and familiar grammar", () => {
+  for (const [familiarText, formalText, familiarAnswer, formalAnswer] of [
+    [
+      "¿De dónde eres?",
+      "¿De dónde es usted?",
+      "¿De dónde eres?",
+      "¿De dónde es usted?",
+    ],
+    [
+      "¿Cómo te llamas?",
+      "¿Cómo se llama usted?",
+      "¿Cómo te llamas?",
+      "¿Cómo se llama usted?",
+    ],
+  ]) {
+    const familiar = cards.find((card) => card.es === familiarText);
+    const formal = cards.find((card) => card.es === formalText);
+    const familiarSession = createSession([familiar], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+    const formalSession = createSession([formal], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+
+    assert.equal(submitTypedAnswer(familiarSession, familiarAnswer), true);
+    assert.equal(submitTypedAnswer(formalSession, formalAnswer), true);
+
+    const wrongFormalSession = createSession([formal], cards, {
+      direction: "en-es",
+      mode: "typed",
+    });
+    assert.equal(submitTypedAnswer(wrongFormalSession, familiarAnswer), true);
+    assert.equal(wrongFormalSession.responses[0].correct, false);
+    assert.equal(wrongFormalSession.correct, 0);
+  }
 });
 
 test("selection is changeable and only confirmation counts an answer once", () => {
