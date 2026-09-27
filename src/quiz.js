@@ -72,6 +72,11 @@ const normalizeTypedAnswer = (text) => {
 };
 function typedAnswerVariants(answer) {
   let variants = [answer];
+  if (/^(sir|ma'am),\s*(?:mr\.?|mrs\.?)$/i.test(answer))
+    variants = [
+      ...variants,
+      ...answer.split(/,\s*/),
+    ];
   if (/\(name\)/i.test(answer))
     variants = [
       ...variants,

@@ -296,7 +296,11 @@ test("typed answers accept contractions, expanded phrases, and title abbreviatio
     { es: "Hay relámpagos", direction: "es-en", answer: "There is lightning" },
     { es: "señora (Sra.)", direction: "en-es", answer: "señora" },
     { es: "señora (Sra.)", direction: "en-es", answer: "Sra." },
-    { es: "señor", direction: "es-en", answer: "sir, mister" },
+    { es: "señor", direction: "es-en", answer: "sir" },
+    { es: "señor", direction: "es-en", answer: "Mr." },
+    { es: "señor", direction: "es-en", answer: "mister" },
+    { es: "señora (Sra.)", direction: "es-en", answer: "ma'am" },
+    { es: "señora (Sra.)", direction: "es-en", answer: "Mrs." },
   ];
   for (const { es, direction, answer } of cases) {
     const card = cards.find((item) => item.es === es);
