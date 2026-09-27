@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260926-5";
+import { cards } from "./cards.js?v=20260926-6";
 import {
   createSession,
   skipQuestion,
@@ -7,7 +7,7 @@ import {
   selectAnswer,
   confirmAnswer,
   submitTypedAnswer,
-} from "./quiz.js?v=20260926-5";
+} from "./quiz.js?v=20260926-6";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -26,6 +26,11 @@ const escapeHtml = (value) =>
         char
       ],
   );
+const displayAnswer = (value) =>
+  value
+    .replace(/\s*\(name\)/gi, "")
+    .replace(/\(yo\)\s*/gi, "")
+    .replace(/o\(a\)/gi, "o/a");
 const arrow = '<span aria-hidden="true">↗</span>';
 
 function setScreen(name) {
@@ -82,7 +87,7 @@ function renderQuestion(focusTarget) {
       : null);
   const showCorrect = question.revealed || response?.correct;
   const total = session.questions.length;
-  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(question.answer)}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
+  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${total}" value="${session.answered}" aria-label="Questions answered">${session.answered} / ${total}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(displayAnswer(question.answer))}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
     session.mode === "typed"
       ? `<div class="typed-answer"><label for="typed-answer">Your answer</label><div class="typed-controls"><input id="typed-answer" type="text" autocomplete="off" value="${escapeHtml(response?.choice ?? "")}" ${response ? "disabled" : ""} aria-label="Your ${question.direction === "es-en" ? "English" : "Spanish"} answer"><button id="speak" class="secondary" type="button" ${response ? "disabled" : ""}>🎙 Speak answer</button></div><p id="speech-status" class="speech-status" role="status" aria-live="polite">Speech input uses your browser's speech recognition, when available.</p></div>`
       : `<div class="answers">${question.options
