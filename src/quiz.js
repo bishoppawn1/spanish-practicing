@@ -30,6 +30,11 @@ export function weightedShuffle(items, weights = {}, random = Math.random) {
   }
   return result;
 }
+export function unpracticedCards(cards, practicedIds) {
+  const practiced =
+    practicedIds instanceof Set ? practicedIds : new Set(practicedIds);
+  return cards.filter((card) => !practiced.has(card.id));
+}
 const answerWordForms = {
   "i'm": "i am",
   "you're": "you are",

@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260927-2";
+import { cards } from "./cards.js?v=20260927-3";
 import {
   createSession,
   skipQuestion,
@@ -7,7 +7,8 @@ import {
   selectAnswer,
   confirmAnswer,
   submitTypedAnswer,
-} from "./quiz.js?v=20260927-2";
+  unpracticedCards,
+} from "./quiz.js?v=20260927-3";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -20,6 +21,8 @@ let screen = "home";
 let speechRecognition = null;
 const progressStorageKey = "spanish-practicing-card-progress-v1";
 const cardProgress = loadCardProgress();
+const practiceHistoryKey = "spanish-practicing-practiced-cards-v1";
+const practicedCardIds = new Set(loadPracticeHistory());
 const escapeHtml = (value) =>
   String(value).replace(
     /[&<>"']/g,
@@ -70,6 +73,50 @@ function saveCardProgress() {
   }
 }
 
+function loadPracticeHistory() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(practiceHistoryKey) ?? "[]");
+    return Array.isArray(stored)
+      ? stored.filter((id) => cards.some((card) => card.id === id))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePracticeHistory() {
+  try {
+    localStorage.setItem(
+      practiceHistoryKey,
+      JSON.stringify([...practicedCardIds]),
+    );
+  } catch {
+    // Keep practice available when browser storage is unavailable.
+  }
+}
+
+function markPracticed(card) {
+  if (!practicedCardIds.has(card.id)) {
+    practicedCardIds.add(card.id);
+    savePracticeHistory();
+  }
+}
+
+function updatePracticeAvailability() {
+  const available = cards.length - practicedCardIds.size;
+  const length = document.querySelector("#count");
+  const start = document.querySelector("#start");
+  const status = document.querySelector("#practice-history");
+  if (!length || !start || !status) return;
+  const requested = Number(length.value);
+  const roundSize = Math.min(requested, available);
+  status.textContent = `${practicedCardIds.size} of ${cards.length} cards practiced · ${available} new cards available${available < requested ? ` · next round will contain ${roundSize}` : ""}`;
+  start.disabled = available === 0;
+  start.innerHTML = available
+    ? `Start practicing ${roundSize === requested ? requested : roundSize} new ${roundSize === 1 ? "card" : "cards"} ${arrow}`
+    : "No new cards available";
+}
+
 function practiceWeights() {
   return Object.fromEntries(
     cards.map((card) => {
@@ -105,21 +152,36 @@ function showHome() {
   setScreen("home");
   main.innerHTML = `
     <section class="welcome"><div><h1 tabindex="-1">Spanish practice</h1><p class="intro">98 terms: greetings, introductions, calendar, and weather.</p></div></section>
-    <section class="home-grid" aria-label="Practice setup"><div class="setup-card"><h2>Practice setup</h2><div class="setup-options"><label>Practice direction<select id="direction"><option value="mixed">Both English and Spanish</option><option value="es-en">Spanish → English</option><option value="en-es">English → Spanish</option></select></label><label>Session length<select id="count"><option value="10">10 questions</option><option value="20">20 questions</option><option value="30">30 questions</option><option value="40">40 questions</option><option value="50">50 questions</option><option value="98">All 98 questions</option></select></label><label>Answer format<select id="mode"><option value="multiple-choice">Multiple choice</option><option value="typed">Type the answer</option></select></label></div><button class="primary start" id="start">Start practicing ${arrow}</button></div><aside class="topics-card"><h2>Vocabulary</h2><p class="muted">Review or search all 98 Spanish terms and their English translations.</p><button id="browse" class="text-button">View vocabulary <span aria-hidden="true">→</span></button></aside></section>`;
+    <section class="home-grid" aria-label="Practice setup"><div class="setup-card"><h2>Practice setup</h2><div class="setup-options"><label>Practice direction<select id="direction"><option value="mixed">Both English and Spanish</option><option value="es-en">Spanish → English</option><option value="en-es">English → Spanish</option></select></label><label>Session length<select id="count"><option value="10">10 questions</option><option value="20">20 questions</option><option value="30">30 questions</option><option value="40">40 questions</option><option value="50">50 questions</option><option value="98">All 98 questions</option></select></label><label>Answer format<select id="mode"><option value="multiple-choice">Multiple choice</option><option value="typed">Type the answer</option></select></label></div><button class="primary start" id="start">Start practicing ${arrow}</button><p class="muted" id="practice-history" role="status"></p><button class="text-button" id="reset-practice">Reset practiced cards</button></div><aside class="topics-card"><h2>Vocabulary</h2><p class="muted">Review or search all 98 Spanish terms and their English translations.</p><button id="browse" class="text-button">View vocabulary <span aria-hidden="true">→</span></button></aside></section>`;
   document.querySelector("#direction").value = direction;
   document.querySelector("#count").value = String(count);
   document.querySelector("#mode").value = mode;
   document.querySelector("#direction").onchange = (event) => {
     direction = event.target.value;
   };
-  document.querySelector("#count").onchange = (event) => {
-    count = Number(event.target.value);
-  };
   document.querySelector("#mode").onchange = (event) => {
     mode = event.target.value;
   };
-  document.querySelector("#start").onclick = () => startSession(cards, count);
+  document.querySelector("#count").onchange = (event) => {
+    count = Number(event.target.value);
+    updatePracticeAvailability();
+  };
+  document.querySelector("#start").onclick = startNewRound;
+  document.querySelector("#reset-practice").onclick = () => {
+    practicedCardIds.clear();
+    savePracticeHistory();
+    updatePracticeAvailability();
+  };
+  updatePracticeAvailability();
   document.querySelector("#browse").onclick = showVocabulary;
+}
+function startNewRound() {
+  const freshCards = unpracticedCards(cards, practicedCardIds);
+  if (!freshCards.length) {
+    showHome();
+    return;
+  }
+  startSession(freshCards, Math.min(count, freshCards.length));
 }
 function startSession(selected, size = selected.length) {
   stopSpeechRecognition();
@@ -150,6 +212,7 @@ function renderQuestion(focusTarget) {
   if (session.index >= session.questions.length) return showResults();
   setScreen("question");
   const question = session.questions[session.index];
+  if (!session.testMode) markPracticed(question.card);
   const response =
     session.responses[session.index] ??
     (session.questions[session.index]?.skipped
@@ -359,7 +422,7 @@ function showResults() {
     const exactCards = Object.values(session.cardStates).map((state) => state.card);
     testButton.onclick = () => startTest(exactCards);
   }
-  document.querySelector("#again").onclick = () => startSession(cards, count);
+  document.querySelector("#again").onclick = startNewRound;
   document.querySelector("#setup").onclick = () => {
     session = null;
     showHome();

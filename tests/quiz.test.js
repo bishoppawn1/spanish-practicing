@@ -14,6 +14,7 @@ import {
   skipQuestion,
   submitTypedAnswer,
   weightedShuffle,
+  unpracticedCards,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -233,6 +234,37 @@ test("30, 40, and 50 card round sizes select that many distinct cards", () => {
     assert.equal(session.totalCards, count);
     assert.equal(new Set(session.questions.map(({ card }) => card.id)).size, count);
   }
+});
+
+test("new practice rounds exclude every card already shown in practice", () => {
+  const firstRound = createSession(cards, cards, {
+    direction: "es-en",
+    count: 20,
+  });
+  const practicedIds = new Set(firstRound.questions.map(({ card }) => card.id));
+  const fresh = unpracticedCards(cards, practicedIds);
+  const secondRound = createSession(fresh, cards, {
+    direction: "es-en",
+    count: 30,
+  });
+  assert.equal(secondRound.totalCards, 30);
+  assert.ok(
+    secondRound.questions.every(({ card }) => !practicedIds.has(card.id)),
+  );
+  assert.equal(
+    new Set(secondRound.questions.map(({ card }) => card.id)).size,
+    30,
+  );
+
+  const practicedFirstEighty = new Set(
+    cards.slice(0, 80).map(({ id }) => id),
+  );
+  const onlyEighteenNew = unpracticedCards(cards, practicedFirstEighty);
+  const shorterRound = createSession(onlyEighteenNew, cards, {
+    direction: "es-en",
+    count: 30,
+  });
+  assert.equal(shorterRound.totalCards, 18);
 });
 
 test("test mode scores one attempt per exact selected card without retrying misses", () => {
