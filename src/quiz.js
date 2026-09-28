@@ -211,6 +211,7 @@ export function createSession(
     direction = "mixed",
     count = selected.length,
     mode = "multiple-choice",
+    testMode = false,
     weights = {},
     random = Math.random,
   } = {},
@@ -249,6 +250,7 @@ export function createSession(
     ),
     direction,
     mode,
+    testMode,
     index: 0,
     correct: 0,
     answered: 0,
@@ -299,6 +301,18 @@ function recordAnswer(session, question, correct) {
     state.answered = true;
     state.firstAnswerCorrect = correct;
     session.answered++;
+  }
+
+  // A test measures one response per card. Misses remain visible in the
+  // results, but do not trigger the spaced-review queue used during practice.
+  if (session.testMode) {
+    state.complete = true;
+    state.needsReview = false;
+    state.consecutiveCorrect = 0;
+    session.completed++;
+    if (correct && firstAnswer) session.correct++;
+    session.responses[session.index].reviewPending = false;
+    return;
   }
 
   if (!correct) {

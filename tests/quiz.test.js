@@ -185,7 +185,7 @@ test("hints remove only two wrong options, can only be used once, and do not cha
 
 test("mixed sessions use both languages with matching prompts and answer languages", () => {
   for (const random of [() => 0.25, () => 0.75]) {
-    for (const count of [1, 2, 10, 20, 98]) {
+    for (const count of [1, 2, 10, 20, 30, 40, 50, 98]) {
       const session = createSession(cards, cards, { count, random });
       const spanish = session.questions.filter(
         (q) => q.direction === "es-en",
@@ -222,6 +222,58 @@ test("single-direction sessions retain the selected language", () => {
       session.questions.every((question) => question.direction === direction),
     );
   }
+});
+
+test("30, 40, and 50 card round sizes select that many distinct cards", () => {
+  for (const count of [30, 40, 50]) {
+    const session = createSession(cards, cards, {
+      direction: "es-en",
+      count,
+    });
+    assert.equal(session.totalCards, count);
+    assert.equal(new Set(session.questions.map(({ card }) => card.id)).size, count);
+  }
+});
+
+test("test mode scores one attempt per exact selected card without retrying misses", () => {
+  const selected = [cards[0], cards[4], cards[8], cards[12]];
+  let seed = 7;
+  const random = () => {
+    seed = (seed * 48271) % 2147483647;
+    return seed / 2147483647;
+  };
+  const test = createSession(selected, cards, {
+    direction: "es-en",
+    mode: "typed",
+    testMode: true,
+    random,
+  });
+  assert.equal(test.testMode, true);
+  assert.deepEqual(
+    new Set(test.questions.map(({ card }) => card.id)),
+    new Set(selected.map(({ id }) => id)),
+  );
+  assert.notDeepEqual(
+    test.questions.map(({ card }) => card.id),
+    selected.map(({ id }) => id),
+  );
+
+  const first = test.questions[0];
+  assert.equal(submitTypedAnswer(test, "definitely wrong"), true);
+  assert.equal(test.questions.length, selected.length);
+  assert.equal(test.answered, 1);
+  assert.equal(test.correct, 0);
+  assert.equal(test.completed, 1);
+  assert.equal(advanceQuestion(test), true);
+  while (test.index < test.questions.length) {
+    const question = test.questions[test.index];
+    assert.equal(submitTypedAnswer(test, question.answer), true);
+    assert.equal(advanceQuestion(test), true);
+  }
+  assert.equal(test.answered, selected.length);
+  assert.equal(test.correct, selected.length - 1);
+  assert.equal(test.completed, selected.length);
+  assert.ok(test.cardStates[first.card.id].complete);
 });
 
 test("typed answers confirm once, accept slash alternatives and ignore accents", () => {

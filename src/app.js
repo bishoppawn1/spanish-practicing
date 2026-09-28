@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260927-1";
+import { cards } from "./cards.js?v=20260927-2";
 import {
   createSession,
   skipQuestion,
@@ -7,7 +7,7 @@ import {
   selectAnswer,
   confirmAnswer,
   submitTypedAnswer,
-} from "./quiz.js?v=20260927-1";
+} from "./quiz.js?v=20260927-2";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -105,7 +105,7 @@ function showHome() {
   setScreen("home");
   main.innerHTML = `
     <section class="welcome"><div><h1 tabindex="-1">Spanish practice</h1><p class="intro">98 terms: greetings, introductions, calendar, and weather.</p></div></section>
-    <section class="home-grid" aria-label="Practice setup"><div class="setup-card"><h2>Practice setup</h2><div class="setup-options"><label>Practice direction<select id="direction"><option value="mixed">Both English and Spanish</option><option value="es-en">Spanish → English</option><option value="en-es">English → Spanish</option></select></label><label>Session length<select id="count"><option value="98">All 98 questions</option><option value="10">10 questions</option><option value="20">20 questions</option></select></label><label>Answer format<select id="mode"><option value="multiple-choice">Multiple choice</option><option value="typed">Type the answer</option></select></label></div><button class="primary start" id="start">Start practicing ${arrow}</button></div><aside class="topics-card"><h2>Vocabulary</h2><p class="muted">Review or search all 98 Spanish terms and their English translations.</p><button id="browse" class="text-button">View vocabulary <span aria-hidden="true">→</span></button></aside></section>`;
+    <section class="home-grid" aria-label="Practice setup"><div class="setup-card"><h2>Practice setup</h2><div class="setup-options"><label>Practice direction<select id="direction"><option value="mixed">Both English and Spanish</option><option value="es-en">Spanish → English</option><option value="en-es">English → Spanish</option></select></label><label>Session length<select id="count"><option value="10">10 questions</option><option value="20">20 questions</option><option value="30">30 questions</option><option value="40">40 questions</option><option value="50">50 questions</option><option value="98">All 98 questions</option></select></label><label>Answer format<select id="mode"><option value="multiple-choice">Multiple choice</option><option value="typed">Type the answer</option></select></label></div><button class="primary start" id="start">Start practicing ${arrow}</button></div><aside class="topics-card"><h2>Vocabulary</h2><p class="muted">Review or search all 98 Spanish terms and their English translations.</p><button id="browse" class="text-button">View vocabulary <span aria-hidden="true">→</span></button></aside></section>`;
   document.querySelector("#direction").value = direction;
   document.querySelector("#count").value = String(count);
   document.querySelector("#mode").value = mode;
@@ -131,6 +131,19 @@ function startSession(selected, size = selected.length) {
   });
   renderQuestion();
 }
+function startTest(selectedCards) {
+  stopSpeechRecognition();
+  const testCards = [...selectedCards];
+  direction = session.direction;
+  mode = session.mode;
+  session = createSession(testCards, cards, {
+    direction,
+    count: testCards.length,
+    mode,
+    testMode: true,
+  });
+  renderQuestion();
+}
 
 function renderQuestion(focusTarget) {
   stopSpeechRecognition();
@@ -145,7 +158,7 @@ function renderQuestion(focusTarget) {
   const showCorrect = question.revealed || response?.correct;
   const total = session.questions.length;
   const isDone = Boolean(cardProgress[question.card.id]?.done);
-  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${session.totalCards}" value="${session.completed}" aria-label="Cards completed">${session.completed} / ${session.totalCards}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span><button id="mark-done" class="known-toggle" type="button" aria-pressed="${isDone}">${isDone ? "Marked as already done" : "Mark as already done"}</button></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${response.reviewPending && response.correct ? "<span>One more correct review completes this card.</span>" : ""}${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(displayAnswer(question.answer))}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
+  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${session.testMode ? "TEST · " : ""}${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${session.totalCards}" value="${session.completed}" aria-label="Cards completed">${session.completed} / ${session.totalCards}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.testMode ? "TEST · " : ""}${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span><button id="mark-done" class="known-toggle" type="button" aria-pressed="${isDone}">${isDone ? "Marked as already done" : "Mark as already done"}</button></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${response.reviewPending && response.correct ? "<span>One more correct review completes this card.</span>" : ""}${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(displayAnswer(question.answer))}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
     session.mode === "typed"
       ? `<div class="typed-answer"><label for="typed-answer">Your answer</label><div class="typed-controls"><input id="typed-answer" type="text" autocomplete="off" value="${escapeHtml(response?.choice ?? "")}" ${response ? "disabled" : ""} aria-label="Your ${question.direction === "es-en" ? "English" : "Spanish"} answer"><button id="speak" class="secondary" type="button" ${response ? "disabled" : ""}>🎙 Speak answer</button></div><p id="speech-status" class="speech-status" role="status" aria-live="polite">Speech input uses your browser's speech recognition, when available.</p></div>`
       : `<div class="answers">${question.options
@@ -338,9 +351,14 @@ function showResults() {
     .filter((state) => state.firstAnswerCorrect === false)
     .map((state) => state.card);
   const percentage = Math.round((session.correct / session.answered) * 100);
-  main.innerHTML = `<section class="results"><h1 tabindex="-1">Session results</h1><div class="result-score"><strong>${session.correct}<span> / ${session.answered}</span></strong><p>cards completed correctly out of ${session.answered} answered</p><p>${session.skipCount} skipped</p><span class="pill">${percentage}% ACCURACY</span></div><div class="result-actions">${missed.length ? `<button id="retry" class="primary">Review ${missed.length} first-try ${missed.length === 1 ? "miss" : "misses"} ${arrow}</button>` : ""}<button id="again" class="${missed.length ? "secondary" : "primary"}">Practice again ↗</button><button id="setup" class="text-button">Back to setup</button></div>${missed.length ? `<div class="review"><h2>Missed on first try</h2>${missed.map((card) => `<div class="review-row"><span lang="es">${escapeHtml(card.es)}</span><span>${escapeHtml(card.en)}</span></div>`).join("")}</div>` : ""}</section>`;
+  main.innerHTML = `<section class="results"><h1 tabindex="-1">${session.testMode ? "Test results" : "Practice results"}</h1><div class="result-score"><strong>${session.correct}<span> / ${session.answered}</span></strong><p>cards completed correctly out of ${session.answered} answered</p><p>${session.skipCount} skipped</p><span class="pill">${Number.isFinite(percentage) ? percentage : 0}% ACCURACY</span></div><div class="result-actions">${missed.length ? `<button id="retry" class="primary">Review ${missed.length} first-try ${missed.length === 1 ? "miss" : "misses"} ${arrow}</button>` : ""}${!session.testMode ? `<button id="test-cards" class="${missed.length ? "secondary" : "primary"}">Test these ${session.totalCards} cards</button>` : ""}<button id="again" class="secondary">Practice again ↗</button><button id="setup" class="text-button">Back to setup</button></div>${missed.length ? `<div class="review"><h2>Missed on first try</h2>${missed.map((card) => `<div class="review-row"><span lang="es">${escapeHtml(card.es)}</span><span>${escapeHtml(card.en)}</span></div>`).join("")}</div>` : ""}</section>`;
   if (missed.length)
     document.querySelector("#retry").onclick = () => startSession(missed);
+  const testButton = document.querySelector("#test-cards");
+  if (testButton) {
+    const exactCards = Object.values(session.cardStates).map((state) => state.card);
+    testButton.onclick = () => startTest(exactCards);
+  }
   document.querySelector("#again").onclick = () => startSession(cards, count);
   document.querySelector("#setup").onclick = () => {
     session = null;
