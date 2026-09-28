@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260927-3";
+import { cards } from "./cards.js?v=20260927-4";
 import {
   createSession,
   skipQuestion,
@@ -8,7 +8,8 @@ import {
   confirmAnswer,
   submitTypedAnswer,
   unpracticedCards,
-} from "./quiz.js?v=20260927-3";
+  markAnswerCorrect,
+} from "./quiz.js?v=20260927-4";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -234,7 +235,7 @@ function renderQuestion(focusTarget) {
             return `<button class="answer ${right ? "right" : ""} ${wrong ? "wrong" : ""} ${eliminated ? "eliminated" : ""} ${selected ? "selected" : ""}" aria-pressed="${selected}" data-choice="${index}" ${response || eliminated ? "disabled" : ""}><span class="answer-letter" aria-hidden="true">${String.fromCharCode(65 + index)}</span><span lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(option)}</span>${right ? '<span class="answer-state">✓ Correct</span>' : wrong ? '<span class="answer-state">✕ Your answer</span>' : eliminated ? '<span class="answer-state">Removed by hint</span>' : selected ? '<span class="answer-state">Selected</span>' : ""}</button>`;
           })
           .join("")}</div>`
-  }<div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${!question.skipped && session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools">${session.mode === "multiple-choice" ? `<button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button>` : ""}<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button><button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button></div><button id="confirm" class="primary" ${session.mode === "typed" ? "disabled" : question.selected === null ? "disabled" : ""}>Confirm answer</button>`}</div></div></section>`;
+  }<div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${!question.skipped && session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools">${session.mode === "multiple-choice" ? `<button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button>` : ""}<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button><button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button></div><div class="answer-actions"><button id="self-check" class="secondary" type="button">I answered correctly</button><button id="confirm" class="primary" ${session.mode === "typed" ? "disabled" : question.selected === null ? "disabled" : ""}>Confirm answer</button></div>`}</div></div></section>`;
   document.querySelector("#back").onclick = () => {
     session = null;
     showHome();
@@ -295,6 +296,12 @@ function renderQuestion(focusTarget) {
       if (submitted) {
         const response = session.responses[session.index];
         if (!response.correct) recordMiss(question.card);
+        renderQuestion();
+        announceResult();
+      }
+    };
+    document.querySelector("#self-check").onclick = () => {
+      if (markAnswerCorrect(session)) {
         renderQuestion();
         announceResult();
       }

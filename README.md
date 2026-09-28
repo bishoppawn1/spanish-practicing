@@ -6,7 +6,7 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 
 ## Practice
 
-- Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available; confirm the answer before it is scored.
+- Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available, then confirm it. In either mode, **I answered correctly** lets you self-check aloud and record a correct answer without selecting or typing. It is available during practice and tests.
 - Click **Start practicing** for shuffled questions.
 - A card is marked practiced the first time it appears in a practice round. Later rounds select only cards not yet shown, so (for example) a 20-card round followed by a 30-card round uses 30 different cards. The setup shows how many new cards remain; if fewer remain than requested, the round uses all remaining new cards. **Reset practiced cards** clears this history so every card can be selected again.
 - During practice, use **Mark as already done** on a card to reduce its chance of appearing in future sessions. Incorrect confirmed answers are saved as difficult cards and receive a much higher selection weight. This history stays in this browser and can be changed by marking a card done again after a miss.

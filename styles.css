@@ -534,6 +534,10 @@ progress::-moz-progress-bar {
 .feedback-actions > button {
   flex: 1;
 }
+.answer-actions {
+  display: flex;
+  gap: 12px;
+}
 .feedback {
   margin-top: 24px;
   padding: 22px 26px;
@@ -806,6 +810,17 @@ input::placeholder {
   }
   #confirm {
     width: 100%;
+  }
+  .answer-actions {
+    width: 100%;
+  }
+  .answer-actions > button {
+    flex: 1;
+    min-width: 0;
+    padding-inline: 12px;
+  }
+  .answer-actions #confirm {
+    width: auto;
   }
   .feedback-actions {
     gap: 10px;

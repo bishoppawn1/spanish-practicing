@@ -15,6 +15,7 @@ import {
   submitTypedAnswer,
   weightedShuffle,
   unpracticedCards,
+  markAnswerCorrect,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -344,6 +345,26 @@ test("typed answers confirm once, accept slash alternatives and ignore accents",
   });
   assert.equal(submitTypedAnswer(accentSession, "miercoles"), true);
   assert.equal(accentSession.correct, 1);
+});
+
+test("self-check records correct answers without input in both modes, including tests", () => {
+  for (const mode of ["multiple-choice", "typed"]) {
+    for (const testMode of [false, true]) {
+      const session = createSession([cards[0]], cards, {
+        direction: "es-en",
+        mode,
+        testMode,
+      });
+      assert.equal(markAnswerCorrect(session), true);
+      assert.equal(session.responses[0].correct, true);
+      assert.equal(session.responses[0].selfReported, true);
+      assert.equal(session.answered, 1);
+      assert.equal(session.correct, 1);
+      assert.equal(session.completed, 1);
+      assert.equal(markAnswerCorrect(session), false);
+      assert.equal(session.answered, 1);
+    }
+  }
 });
 
 test("typed translations do not require formal or familiar labels", () => {

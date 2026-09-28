@@ -372,6 +372,20 @@ export function submitTypedAnswer(session, response) {
   recordAnswer(session, question, correct);
   return true;
 }
+export function markAnswerCorrect(session) {
+  const question = session.questions[session.index];
+  if (!question || question.skipped || session.responses[session.index])
+    return false;
+  session.responses.push({
+    card: question.card,
+    choice: "",
+    correct: true,
+    hinted: false,
+    selfReported: true,
+  });
+  recordAnswer(session, question, true);
+  return true;
+}
 export function selectAnswer(session, choice) {
   const question = session.questions[session.index];
   if (
