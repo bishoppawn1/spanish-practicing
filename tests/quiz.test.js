@@ -77,43 +77,80 @@ test("weighted practice selection prioritizes missed cards and lowers done cards
     3,
   );
 });
-test("correct, wrong, double-click, completion, and missed-card retry scoring", () => {
-  const session = createSession(cards, cards, { count: 3 });
+test("missed cards retry after one card and complete after two spaced correct answers", () => {
+  const [a, b, c, d, e, f, g] = cards;
+  const session = createSession([a, b, c, d, e, f, g], cards, {
+    direction: "es-en",
+    random: () => 0,
+  });
+  const first = session.questions[0];
   assert.equal(advanceQuestion(session), false);
   assert.equal(answerQuestion(session, "not an option"), false);
-  answerQuestion(session, session.questions[0].answer);
-  assert.equal(answerQuestion(session, session.questions[0].answer), false);
-  assert.equal(session.correct, 1);
-  assert.equal(session.answered, 1);
-  advanceQuestion(session);
-  answerQuestion(
-    session,
-    session.questions[1].options.find(
-      (option) => option !== session.questions[1].answer,
+  assert.equal(
+    answerQuestion(
+      session,
+      first.options.find((x) => x !== first.answer),
     ),
+    true,
   );
-  advanceQuestion(session);
-  assert.equal(answerQuestion(session, null), false);
-  answerQuestion(session, session.questions[2].answer);
-  advanceQuestion(session);
-  assert.equal(session.index, 3);
-  assert.equal(session.correct, 2);
-  assert.equal(session.answered, 3);
-  assert.equal(answerQuestion(session, null), false);
-  assert.equal(advanceQuestion(session), false);
-  const missed = session.responses
-    .filter((response) => !response.correct)
-    .map((response) => response.card);
-  const retry = createSession(missed, cards);
-  assert.equal(retry.questions.length, 1);
-  assert.equal(retry.skipCount, 0);
-  assert.equal(retry.correct, 0);
-  assert.equal(retry.answered, 0);
-  assert.ok(retry.questions.every((question) => question.options.length === 4));
+  assert.equal(answerQuestion(session, first.answer), false);
+  assert.equal(session.correct, 0);
+  assert.equal(session.answered, 1);
   assert.deepEqual(
-    retry.questions.map((q) => q.card.id).sort(),
-    missed.map((c) => c.id).sort(),
+    session.questions.slice(0, 3).map((question) => question.card.id),
+    [a.id, b.id, a.id],
   );
+
+  advanceQuestion(session);
+  const questionB = session.questions[session.index];
+  assert.equal(questionB.card.id, b.id);
+  answerQuestion(session, questionB.answer);
+  advanceQuestion(session);
+  const retryA = session.questions[session.index];
+  assert.equal(retryA.card.id, a.id);
+  answerQuestion(session, retryA.answer);
+  assert.equal(session.answered, 2);
+  assert.equal(session.correct, 1);
+  assert.equal(session.cardStates[a.id].complete, false);
+  assert.equal(session.questions[7].card.id, a.id);
+  assert.deepEqual(
+    session.questions.slice(3, 8).map((question) => question.card.id),
+    [c.id, d.id, e.id, f.id, a.id],
+  );
+
+  advanceQuestion(session);
+  for (const card of [c, d, e, f]) {
+    assert.equal(session.questions[session.index].card.id, card.id);
+    answerQuestion(session, session.questions[session.index].answer);
+    advanceQuestion(session);
+  }
+  assert.equal(session.questions[session.index].card.id, a.id);
+  const finalA = session.questions[session.index];
+  answerQuestion(session, finalA.answer);
+  assert.equal(session.cardStates[a.id].complete, true);
+  assert.equal(session.completed, 6);
+  assert.equal(session.answered, 6);
+  assert.equal(session.correct, 6);
+});
+
+test("typed retries use the same two-correct completion rule", () => {
+  const card = cards.find((item) => item.es === "Buenos días.");
+  const session = createSession([card], cards, {
+    direction: "es-en",
+    mode: "typed",
+  });
+  submitTypedAnswer(session, "wrong");
+  assert.equal(session.answered, 1);
+  assert.equal(session.correct, 0);
+  advanceQuestion(session);
+  submitTypedAnswer(session, "good morning");
+  assert.equal(session.correct, 0);
+  assert.equal(session.cardStates[card.id].complete, false);
+  advanceQuestion(session);
+  submitTypedAnswer(session, "good morning");
+  assert.equal(session.answered, 1);
+  assert.equal(session.correct, 1);
+  assert.equal(session.completed, 1);
 });
 test("months, days and seasons use distractors from the same family", () => {
   for (const card of cards.filter((card) =>
@@ -394,46 +431,36 @@ test("hints clear an eliminated selection and skip does not confirm the selected
   assert.equal(session.responses.length, 0);
 });
 
-test("skips return to a random pending position without counting or duplicating cards", () => {
-  for (const random of [() => 0, () => 0.999]) {
-    const session = createSession(cards, cards, { count: 10 });
-    answerQuestion(session, session.questions[0].answer);
-    advanceQuestion(session);
-    const skipped = session.questions[session.index];
-    selectAnswer(session, skipped.answer);
-    useHint(session);
-    assert.equal(skipQuestion(session), true);
-    assert.equal(skipQuestion(session), false);
-    assert.equal(session.skipCount, 1);
-    assert.equal(confirmAnswer(session), false);
-    assert.equal(selectAnswer(session, skipped.answer), false);
-    assert.equal(useHint(session), false);
-    skipped.revealed = true;
-    advanceQuestion(session, random);
-    assert.equal(session.correct, 1);
-    assert.equal(session.answered, 1);
-    assert.equal(session.index, 1);
-    assert.notEqual(session.questions[1].card.id, skipped.card.id);
-    assert.equal(
-      session.questions[random() === 0 ? 2 : 9].card.id,
-      skipped.card.id,
-    );
-    assert.equal(new Set(session.questions.map((q) => q.card.id)).size, 10);
-    assert.equal(skipped.selected, null);
-    assert.equal(skipped.revealed, false);
-    assert.deepEqual(skipped.eliminated, []);
-  }
+test("skipped cards return immediately after the next card without affecting score", () => {
+  const [a, b, c, d] = cards;
+  const session = createSession([a, b, c, d], cards, {
+    direction: "es-en",
+    random: () => 0,
+  });
+  const skipped = session.questions[0];
+  selectAnswer(session, skipped.answer);
+  useHint(session, () => 0);
+  assert.equal(skipQuestion(session), true);
+  assert.equal(skipQuestion(session), false);
+  assert.equal(session.skipCount, 1);
+  assert.equal(confirmAnswer(session), false);
+  assert.equal(session.correct, 0);
+  assert.equal(session.answered, 0);
+  advanceQuestion(session);
+  assert.equal(session.index, 0);
+  assert.equal(session.questions[0].card.id, b.id);
+  assert.equal(session.questions[1].card.id, a.id);
+  assert.equal(session.questions[1].selected, null);
+  assert.equal(session.questions[1].revealed, false);
+  assert.deepEqual(session.questions[1].eliminated, []);
 });
 
-test("all 98 questions can be skipped and still require 98 unique confirmed answers", () => {
+test("skips for all 98 cards preserve score and require two correct reviews per skipped card", () => {
   const session = createSession(cards, cards);
-  const skippedIds = new Set();
   for (let i = 0; i < 98; i++) {
-    skippedIds.add(session.questions[session.index].card.id);
     skipQuestion(session);
-    advanceQuestion(session, () => 0.999);
+    advanceQuestion(session);
   }
-  assert.equal(skippedIds.size, 98);
   assert.equal(session.skipCount, 98);
   assert.equal(session.answered, 0);
   assert.equal(session.correct, 0);
@@ -447,31 +474,31 @@ test("all 98 questions can be skipped and still require 98 unique confirmed answ
   assert.equal(session.skipCount, 98);
   assert.equal(session.correct, 98);
   assert.equal(session.answered, 98);
+  assert.equal(session.completed, 98);
   assert.equal(new Set(session.responses.map((r) => r.card.id)).size, 98);
   assert.equal(skipQuestion(session), false);
 });
 
 test("skipping the last pending question cannot finish the session", () => {
-  const session = createSession(cards, cards, { count: 2 });
+  const [a, b] = cards;
+  const session = createSession([a, b], cards, {
+    count: 2,
+    direction: "es-en",
+    random: () => 0,
+  });
   answerQuestion(
     session,
     session.questions[0].options.find((o) => o !== session.questions[0].answer),
   );
   advanceQuestion(session);
-  const lastId = session.questions[1].card.id;
-  for (let i = 0; i < 3; i++) {
-    skipQuestion(session);
-    advanceQuestion(session);
-    assert.equal(session.skipCount, i + 1);
-    assert.equal(session.index, 1);
-    assert.equal(session.answered, 1);
-    assert.equal(session.correct, 0);
-    assert.equal(session.questions[1].card.id, lastId);
-  }
-  selectAnswer(session, session.questions[1].answer);
-  confirmAnswer(session);
+  assert.equal(session.questions[session.index].card.id, b.id);
+  skipQuestion(session);
   advanceQuestion(session);
-  assert.equal(session.index, 2);
-  assert.equal(session.answered, 2);
-  assert.equal(session.correct, 1);
+  assert.equal(session.index, 1);
+  assert.equal(session.questions[session.index].card.id, a.id);
+  assert.equal(session.questions[session.index + 1].card.id, b.id);
+  assert.equal(session.skipCount, 1);
+  assert.equal(session.answered, 1);
+  assert.equal(session.correct, 0);
+  assert.equal(session.completed, 0);
 });

@@ -217,20 +217,36 @@ export function createSession(
 ) {
   const firstDirection =
     direction === "mixed" && random() < 0.5 ? "en-es" : "es-en";
+  const questions = weightedShuffle(selected, weights, random)
+    .slice(0, count)
+    .map((card, index) => {
+      const questionDirection =
+        direction === "mixed"
+          ? index % 2 === 0
+            ? firstDirection
+            : firstDirection === "es-en"
+              ? "en-es"
+              : "es-en"
+          : direction;
+      return makeQuestion(card, pool, questionDirection, random);
+    });
   return {
-    questions: weightedShuffle(selected, weights, random)
-      .slice(0, count)
-      .map((card, index) => {
-        const questionDirection =
-          direction === "mixed"
-            ? index % 2 === 0
-              ? firstDirection
-              : firstDirection === "es-en"
-                ? "en-es"
-                : "es-en"
-            : direction;
-        return makeQuestion(card, pool, questionDirection, random);
-      }),
+    questions,
+    totalCards: questions.length,
+    completed: 0,
+    cardStates: Object.fromEntries(
+      questions.map((question) => [
+        question.card.id,
+        {
+          card: question.card,
+          answered: false,
+          firstAnswerCorrect: null,
+          needsReview: false,
+          consecutiveCorrect: 0,
+          complete: false,
+        },
+      ]),
+    ),
     direction,
     mode,
     index: 0,
@@ -256,10 +272,64 @@ export function answerQuestion(session, choice) {
     correct,
     hinted: question.eliminated.length > 0,
   });
-  session.answered++;
-  if (correct) session.correct++;
+  recordAnswer(session, question, correct);
   return true;
 }
+
+function retryCopy(question) {
+  return {
+    ...question,
+    options: shuffle(question.options),
+    eliminated: [],
+    selected: null,
+    revealed: false,
+    skipped: false,
+  };
+}
+
+function insertRetry(session, question, offset) {
+  const position = Math.min(session.questions.length, session.index + offset);
+  session.questions.splice(position, 0, retryCopy(question));
+}
+
+function recordAnswer(session, question, correct) {
+  const state = session.cardStates[question.card.id];
+  const firstAnswer = !state.answered;
+  if (firstAnswer) {
+    state.answered = true;
+    state.firstAnswerCorrect = correct;
+    session.answered++;
+  }
+
+  if (!correct) {
+    state.needsReview = true;
+    state.consecutiveCorrect = 0;
+    insertRetry(session, question, 2);
+    session.responses[session.index].reviewPending = true;
+    return;
+  }
+
+  if (!state.needsReview) {
+    state.complete = true;
+    session.completed++;
+    session.correct++;
+    session.responses[session.index].reviewPending = false;
+    return;
+  }
+
+  state.consecutiveCorrect++;
+  if (state.consecutiveCorrect >= 2) {
+    state.complete = true;
+    state.needsReview = false;
+    session.completed++;
+    session.correct++;
+    session.responses[session.index].reviewPending = false;
+    return;
+  }
+  insertRetry(session, question, 5);
+  session.responses[session.index].reviewPending = true;
+}
+
 export function submitTypedAnswer(session, response) {
   const question = session.questions[session.index];
   if (
@@ -280,8 +350,7 @@ export function submitTypedAnswer(session, response) {
     correct,
     hinted: false,
   });
-  session.answered++;
-  if (correct) session.correct++;
+  recordAnswer(session, question, correct);
   return true;
 }
 export function selectAnswer(session, choice) {
@@ -347,16 +416,11 @@ export function advanceQuestion(session, random = Math.random) {
   const question = session.questions[session.index];
   if (question?.skipped) {
     session.questions.splice(session.index, 1);
-    const remaining = session.questions.length - session.index;
-    // Let another pending question appear first, unless this is the last one.
-    const position =
-      session.index + (remaining ? 1 + Math.floor(random() * remaining) : 0);
-    question.skipped = false;
-    question.selected = null;
-    question.eliminated = [];
-    question.revealed = false;
-    question.options = shuffle(question.options, random);
-    session.questions.splice(position, 0, question);
+    const state = session.cardStates[question.card.id];
+    state.needsReview = true;
+    state.consecutiveCorrect = 0;
+    const position = Math.min(session.index + 1, session.questions.length);
+    session.questions.splice(position, 0, retryCopy(question));
     return true;
   }
   if (!session.responses[session.index]) return false;
