@@ -6,7 +6,7 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 
 ## Practice
 
-- Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available, then confirm it. In either mode, **I answered correctly** lets you self-check aloud and record a correct answer without selecting or typing. It is available during practice and tests.
+- Choose **Multiple choice** or **Type the answer** before starting. In typed mode, enter an answer or use **Speak answer** for browser speech recognition when available, then confirm it. In either mode, **I got the answer correct** and **I got the answer wrong** let you self-check aloud without selecting or typing. These buttons work during practice and tests.
 - Click **Start practicing** for shuffled questions.
 - A card is marked practiced the first time it appears in a practice round. Later rounds select only cards not yet shown, so (for example) a 20-card round followed by a 30-card round uses 30 different cards. The setup shows how many new cards remain; if fewer remain than requested, the round uses all remaining new cards. **Reset practiced cards** clears this history so every card can be selected again.
 - During practice, use **Mark as already done** on a card to reduce its chance of appearing in future sessions. Incorrect confirmed answers are saved as difficult cards and receive a much higher selection weight. This history stays in this browser and can be changed by marking a card done again after a miss.
@@ -18,8 +18,8 @@ A text-only learning app for Spanish greetings, introductions, calendar vocabula
 - In multiple-choice mode, **Hint** removes two wrong choices, without counting an answer. Distractors match the kind of answer requested where the set has enough choices.
 - Related distractors prioritize the formal/familiar versions of the same name, age, and origin questions when available. Source slash-separated answers stay intact.
 - **Show correct answer** is available before answering in both formats. Revealing does not affect the score or prevent an answer. After a wrong answer or skip, the button appears next to **Continue to next question**; the answer stays hidden until revealed.
-- **Skip** leaves the score and answered count unchanged. After you continue, the skipped card returns directly after the next card. A session finishes after every card has met its review requirement.
-- After a practice round, choose **Test these cards** to take a test on the exact same cards in a newly randomized order. A test scores one attempt per card; missed answers are shown in results without being requeued. Skipped cards still return after the next card and remain outside the answered score.
+- **Skip** is available during practice. It leaves the score and answered count unchanged; after you continue, the skipped card returns directly after the next card. A practice session finishes after every card has met its review requirement.
+- After a practice round, choose **Test these cards** to take a test on the exact same cards in a newly randomized order. Tests have no skip button and score one attempt per card; missed answers are shown in results without being requeued.
 - Review your results and practice only missed terms in a fresh session.
 - Browse or search all 98 terms in Vocabulary. Switching tabs preserves the session; returning to setup or reloading starts fresh.
 - Use keys **1–4** to select a multiple-choice answer, or Tab and Enter to navigate. There is no timer.

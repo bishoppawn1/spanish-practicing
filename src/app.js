@@ -1,4 +1,4 @@
-import { cards } from "./cards.js?v=20260927-4";
+import { cards } from "./cards.js?v=20260928-1";
 import {
   createSession,
   skipQuestion,
@@ -9,7 +9,8 @@ import {
   submitTypedAnswer,
   unpracticedCards,
   markAnswerCorrect,
-} from "./quiz.js?v=20260927-4";
+  markAnswerWrong,
+} from "./quiz.js?v=20260928-1";
 
 const main = document.querySelector("#main");
 const practiceTab = document.querySelector("#practice-tab");
@@ -222,7 +223,7 @@ function renderQuestion(focusTarget) {
   const showCorrect = question.revealed || response?.correct;
   const total = session.questions.length;
   const isDone = Boolean(cardProgress[question.card.id]?.done);
-  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${session.testMode ? "TEST · " : ""}${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span><span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span></div></div><progress max="${session.totalCards}" value="${session.completed}" aria-label="Cards completed">${session.completed} / ${session.totalCards}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.testMode ? "TEST · " : ""}${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span><button id="mark-done" class="known-toggle" type="button" aria-pressed="${isDone}">${isDone ? "Marked as already done" : "Mark as already done"}</button></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${response.reviewPending && response.correct ? "<span>One more correct review completes this card.</span>" : ""}${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(displayAnswer(question.answer))}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
+  main.innerHTML = `<section class="practice-shell"><div class="practice-top"><button class="text-button" id="back">← Practice setup</button><span class="pill">${session.testMode ? "TEST · " : ""}${question.direction === "es-en" ? "SPANISH → ENGLISH" : "ENGLISH → SPANISH"}</span></div><div class="progress-heading"><span>Question <b>${session.index + 1}</b> of ${total}</span><div class="session-stats"><span id="score" role="status"><b>${session.correct}</b> correct out of <b>${session.answered}</b> answered</span>${session.testMode ? "" : `<span id="skipped-count" role="status"><b>${session.skipCount}</b> skipped</span>`}</div></div><progress max="${session.totalCards}" value="${session.completed}" aria-label="Cards completed">${session.completed} / ${session.totalCards}</progress><div class="question-card"><div class="question-meta"><span class="eyebrow">${session.testMode ? "TEST · " : ""}${session.mode === "typed" ? "TYPE THE" : "CHOOSE THE"} ${question.direction === "es-en" ? "ENGLISH" : "SPANISH"} MEANING</span><button id="mark-done" class="known-toggle" type="button" aria-pressed="${isDone}">${isDone ? "Marked as already done" : "Mark as already done"}</button></div>${response ? `<div tabindex="-1" class="feedback ${response.correct ? "success" : "try-again"}"><strong><span aria-hidden="true">${response.correct ? "✓" : response.choice === null ? "→" : "✕"}</span> ${response.correct ? "Correct!" : response.choice === null ? "Skipped" : "Incorrect"}</strong>${response.reviewPending && response.correct ? "<span>One more correct review completes this card.</span>" : ""}${question.skipped && !question.revealed ? "<span>Still unanswered. This question will appear again.</span>" : ""}</div>` : ""}<h1 tabindex="-1" lang="${question.direction === "es-en" ? "es" : "en"}">${escapeHtml(question.prompt)}</h1>${question.revealed ? `<p class="revealed-answer" role="status" tabindex="-1">Correct answer: <strong lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(displayAnswer(question.answer))}</strong></p>` : ""}${question.eliminated.length ? '<p class="question-hint" role="status">Two wrong choices removed.</p>' : ""}${
     session.mode === "typed"
       ? `<div class="typed-answer"><label for="typed-answer">Your answer</label><div class="typed-controls"><input id="typed-answer" type="text" autocomplete="off" value="${escapeHtml(response?.choice ?? "")}" ${response ? "disabled" : ""} aria-label="Your ${question.direction === "es-en" ? "English" : "Spanish"} answer"><button id="speak" class="secondary" type="button" ${response ? "disabled" : ""}>🎙 Speak answer</button></div><p id="speech-status" class="speech-status" role="status" aria-live="polite">Speech input uses your browser's speech recognition, when available.</p></div>`
       : `<div class="answers">${question.options
@@ -235,7 +236,7 @@ function renderQuestion(focusTarget) {
             return `<button class="answer ${right ? "right" : ""} ${wrong ? "wrong" : ""} ${eliminated ? "eliminated" : ""} ${selected ? "selected" : ""}" aria-pressed="${selected}" data-choice="${index}" ${response || eliminated ? "disabled" : ""}><span class="answer-letter" aria-hidden="true">${String.fromCharCode(65 + index)}</span><span lang="${question.direction === "es-en" ? "en" : "es"}">${escapeHtml(option)}</span>${right ? '<span class="answer-state">✓ Correct</span>' : wrong ? '<span class="answer-state">✕ Your answer</span>' : eliminated ? '<span class="answer-state">Removed by hint</span>' : selected ? '<span class="answer-state">Selected</span>' : ""}</button>`;
           })
           .join("")}</div>`
-  }<div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${!question.skipped && session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools">${session.mode === "multiple-choice" ? `<button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button>` : ""}<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button><button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button></div><div class="answer-actions"><button id="self-check" class="secondary" type="button">I answered correctly</button><button id="confirm" class="primary" ${session.mode === "typed" ? "disabled" : question.selected === null ? "disabled" : ""}>Confirm answer</button></div>`}</div></div></section>`;
+  }<div class="question-bottom">${response ? `<div class="feedback-actions">${!response.correct ? `<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button>` : ""}<button id="next" class="primary">${!question.skipped && session.index + 1 === total ? "See results" : "Continue to next question"} <span aria-hidden="true">→</span></button></div>` : `<div class="question-tools">${session.mode === "multiple-choice" ? `<button id="hint" class="secondary" ${question.eliminated.length ? "disabled" : ""}>${question.eliminated.length ? "Hint used" : "Hint"}</button>` : ""}<button id="reveal" class="secondary" ${question.revealed ? "disabled" : ""}>${question.revealed ? "Correct answer shown" : "Show correct answer"}</button>${session.testMode ? "" : '<button id="skip" class="text-button">Skip <span aria-hidden="true">→</span></button>'}</div><div class="answer-actions"><button id="self-check" class="secondary" type="button">I got the answer correct</button><button id="self-check-wrong" class="secondary" type="button">I got the answer wrong</button><button id="confirm" class="primary" ${session.mode === "typed" ? "disabled" : question.selected === null ? "disabled" : ""}>Confirm answer</button></div>`}</div></div></section>`;
   document.querySelector("#back").onclick = () => {
     session = null;
     showHome();
@@ -306,12 +307,21 @@ function renderQuestion(focusTarget) {
         announceResult();
       }
     };
-    document.querySelector("#skip").onclick = () => {
-      if (skipQuestion(session)) {
+    document.querySelector("#self-check-wrong").onclick = () => {
+      if (markAnswerWrong(session)) {
+        recordMiss(question.card);
         renderQuestion();
         announceResult();
       }
     };
+    const skip = document.querySelector("#skip");
+    if (skip)
+      skip.onclick = () => {
+        if (skipQuestion(session)) {
+          renderQuestion();
+          announceResult();
+        }
+      };
     const hint = document.querySelector("#hint");
     if (hint)
       hint.onclick = () => {

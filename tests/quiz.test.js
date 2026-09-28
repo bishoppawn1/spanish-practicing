@@ -16,6 +16,7 @@ import {
   weightedShuffle,
   unpracticedCards,
   markAnswerCorrect,
+  markAnswerWrong,
 } from "../src/quiz.js";
 
 test("all 98 source cards have unique IDs and both translations", () => {
@@ -364,6 +365,35 @@ test("self-check records correct answers without input in both modes, including 
       assert.equal(markAnswerCorrect(session), false);
       assert.equal(session.answered, 1);
     }
+  }
+});
+
+test("self-reported wrong answers follow practice reviews but end test attempts", () => {
+  const practice = createSession([cards[0]], cards, {
+    direction: "es-en",
+    mode: "typed",
+  });
+  assert.equal(markAnswerWrong(practice), true);
+  assert.equal(practice.responses[0].correct, false);
+  assert.equal(practice.responses[0].selfReported, true);
+  assert.equal(practice.answered, 1);
+  assert.equal(practice.correct, 0);
+  assert.equal(practice.questions.length, 2);
+
+  for (const mode of ["multiple-choice", "typed"]) {
+    const testSession = createSession([cards[0]], cards, {
+      direction: "es-en",
+      mode,
+      testMode: true,
+    });
+    assert.equal(skipQuestion(testSession), false);
+    assert.equal(testSession.skipCount, 0);
+    assert.equal(markAnswerWrong(testSession), true);
+    assert.equal(testSession.responses[0].correct, false);
+    assert.equal(testSession.answered, 1);
+    assert.equal(testSession.correct, 0);
+    assert.equal(testSession.completed, 1);
+    assert.equal(testSession.questions.length, 1);
   }
 });
 

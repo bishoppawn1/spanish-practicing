@@ -386,6 +386,20 @@ export function markAnswerCorrect(session) {
   recordAnswer(session, question, true);
   return true;
 }
+export function markAnswerWrong(session) {
+  const question = session.questions[session.index];
+  if (!question || question.skipped || session.responses[session.index])
+    return false;
+  session.responses.push({
+    card: question.card,
+    choice: "",
+    correct: false,
+    hinted: false,
+    selfReported: true,
+  });
+  recordAnswer(session, question, false);
+  return true;
+}
 export function selectAnswer(session, choice) {
   const question = session.questions[session.index];
   if (
@@ -439,7 +453,12 @@ export function useHint(session, random = Math.random) {
 }
 export function skipQuestion(session) {
   const question = session.questions[session.index];
-  if (!question || question.skipped || session.responses[session.index])
+  if (
+    session.testMode ||
+    !question ||
+    question.skipped ||
+    session.responses[session.index]
+  )
     return false;
   question.skipped = true;
   session.skipCount++;
